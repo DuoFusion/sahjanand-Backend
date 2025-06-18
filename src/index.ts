@@ -41,10 +41,6 @@ app.get('/isServerUp', (req, res) => {
     res.send('Server is running ');
 });
 app.use(router)
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/cms', cmsRoutes);
-app.use('*', bad_gateway);
 
 // Run database seeds
 runSeeds().then(() => {
@@ -55,9 +51,3 @@ runSeeds().then(() => {
 
 let server = new http.Server(app);
 export default server;
-
-// Start server
-const PORT = config.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
