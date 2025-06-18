@@ -1,3 +1,10 @@
 // export * as userController from './user/index'
 export * as authController from "./Auth"
 export * as adminController from "./admin"
+export * as cmsController from "./cms"
+export * as productController from "./product"
+export * as categoryController from "./category"
+export * as aboutUsController from "./about-us"
+export * as privacyPolicyController from "./privacy-policy"
+export * as termsConditionController from "./terms-condition"
+export * as returnPolicyController from "./return-policy"

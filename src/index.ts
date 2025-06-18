@@ -10,7 +10,12 @@ import cors from 'cors'
 import { mongooseConnection} from './database'
 import * as packageInfo from '../package.json'
 import { router } from './Routes'
- 
+import { productRoutes } from './Routes/product';
+import { categoryRoutes } from './Routes/category';
+import { cmsRoutes } from './Routes/cms';
+import { runSeeds } from './database/seed';
+import { config } from '../config';
+
 const app = express();
 
 
@@ -20,7 +25,7 @@ app.use(bodyParser.json({ limit: '200mb' }))
 app.use(bodyParser.urlencoded({ limit: '200mb', extended: true }))
 const health = (req, res) => {
     return res.status(200).json({
-        message: `Q&A Server is Running, Server health is green`,
+        message: `Sahjanand Server is Running, Server health is green`,
         app: packageInfo.name,
         version: packageInfo.version,
         description: packageInfo.description,   
@@ -36,7 +41,23 @@ app.get('/isServerUp', (req, res) => {
     res.send('Server is running ');
 });
 app.use(router)
+app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/cms', cmsRoutes);
 app.use('*', bad_gateway);
+
+// Run database seeds
+runSeeds().then(() => {
+    console.log('Database seeding completed');
+}).catch(error => {
+    console.error('Error during database seeding:', error);
+});
 
 let server = new http.Server(app);
 export default server;
+
+// Start server
+const PORT = config.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

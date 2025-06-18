@@ -13,7 +13,7 @@
     "dist": "sh ./scripts/build.sh",
     "server": "tsc-watch --outDir ./build --onSuccess \"npm run start -- --mode=http\" --onFailure \"echo ERROR! Compilation Failed\""
   },
-  "author": "Arpit Nakarani",
+  "author": "Pramit Mangukiya",
   "license": "ISC",
   "dependencies": {
     "@types/body-parser": "^1.19.2",
@@ -38,6 +38,7 @@
     "node-gcm": "^1.0.5",
     "nodemailer": "^6.7.8",
     "sharp": "^0.30.7",
+    "slugify": "^1.6.6",
     "winston": "^3.8.1"
   },
   "devDependencies": {

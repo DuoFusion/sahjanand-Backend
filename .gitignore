@@ -5,6 +5,7 @@ package-lock.json
 test.js
 test.html
 *.bat
+.env
 .env.dev
 .env.prod
 .env.staging
