@@ -4,7 +4,7 @@ export const updateData = async (modelName, criteria, dataToSet, options) => {
     return modelName.findOneAndUpdate(criteria, dataToSet, options);
 }
 
-export const getData = async (modelName, criteria, projection, options) => {
+export const    getData = async (modelName, criteria, projection, options) => {
     options.lean = true;
     return modelName.find(criteria, projection, options);
 }
