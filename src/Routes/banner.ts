@@ -1,14 +1,13 @@
 import express from 'express';
-import { createBanner, getBanners, updateBanner, deleteBanner, sortBanners } from '../controllers/banner';
-import { validateBanner, validateSortBanners } from '../validation/banner';
-import { validateRequest } from '../middleware/validateRequest';
+import { bannerController } from '../controllers';
+import { validateBanner, validateSortBanners } from '../validation';
 
 const router = express.Router();
 
-router.post('/', validateBanner, validateRequest, createBanner);
-router.get('/', getBanners);
-router.put('/:id', validateBanner, validateRequest, updateBanner);
-router.delete('/:id', deleteBanner);
-router.post('/sort', validateSortBanners, validateRequest, sortBanners);
+router.get('/', bannerController.getBanners);
+router.post('/add', validateBanner, bannerController.createBanner);
+router.post('/sort', validateSortBanners, bannerController.sortBanners);
+router.put('/:id', validateBanner, bannerController.updateBanner);
+router.delete('/:id', bannerController.deleteBanner);
 
 export default router; 

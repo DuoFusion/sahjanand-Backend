@@ -1,33 +1,30 @@
 const mongoose = require('mongoose')
 
 const userSchema: any = new mongoose.Schema({
-    name: { type: String },
-    email: { type: String, required: true },
+    firstName: { type: String },
+    lastName: { type: String },
+    email: { type: String },
     phoneNumber: { type: String },
-    password: { type: String },
+    address: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zipCode: { type: String },
+    country: { type: String },
+    gender: { type: String },
     profilePhoto: { type: String },
-    
-    // Role and permissions
-    role: { type: mongoose.Schema.Types.ObjectId, ref: 'role' },
-    isAdmin: { type: Boolean, default: false },
-    isSuperAdmin: { type: Boolean, default: false },
-    
-    // Authentication
-    otp: { type: Number, default: null },
-    otpExpireTime: { type: Date, default: null },
-    isEmailVerified: { type: Boolean, default: false },
-    
-    // Status
+    password: { type: String },
+    roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'role' },
+    userType: { type: String, enum: ['admin', 'manager', 'user'], default: 'user' },
+    socialMedia: {
+        facebook: { type: String },
+        twitter: { type: String },
+        instagram: { type: String },
+        linkedin: { type: String },
+    },
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     isLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date },
-    
-    // Additional fields
-    department: { type: String },
-    designation: { type: String },
-    accessModules: [{ type: String }],
-
 }, { timestamps: true })
 
 export const userModel = mongoose.model('user', userSchema);

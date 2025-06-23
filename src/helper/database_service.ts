@@ -4,7 +4,7 @@ export const updateData = async (modelName, criteria, dataToSet, options) => {
     return modelName.findOneAndUpdate(criteria, dataToSet, options);
 }
 
-export const    getData = async (modelName, criteria, projection, options) => {
+export const getData = async (modelName, criteria, projection, options) => {
     options.lean = true;
     return modelName.find(criteria, projection, options);
 }
@@ -25,7 +25,7 @@ export const findOneAndPopulate = async (modelName, criteria, projection, option
 }
 
 export const countData = async (modelName, criteria) => {
-    return modelName.count(criteria);
+    return modelName.countDocuments(criteria);
 }
 
 export const createData = async (modelName, objToSave) => {

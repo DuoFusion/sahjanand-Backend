@@ -5,11 +5,12 @@ import { adminJWT } from '../helper';
 const router = Router();
 
 // Public routes
-router.get('/', categoryController.getCategories);
+router.post('/add', categoryController.createCategory);
+router.post('/edit', categoryController.updateCategory);
+router.delete('/:id', categoryController.deleteCategory);
 router.get('/featured', categoryController.getFeaturedCategories);
+router.get('/', categoryController.getCategories);
 
 // Protected routes (admin only)
-router.post('/', adminJWT, categoryController.createCategory);
-router.put('/:id', adminJWT, categoryController.updateCategory);
 
 export const categoryRoutes = router; 

@@ -8,8 +8,8 @@ const productSchema = new mongoose.Schema({
     salePrice: { type: Number },
     sku: { type: String, required: true, unique: true },
     images: [{ type: String }],
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
-    subCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
+    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
+    subCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
     tags: [{ type: String }],
     attributes: {
         color: [{ type: String }],
@@ -33,13 +33,13 @@ const productSchema = new mongoose.Schema({
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
         rating: { type: Number },
         comment: { type: String },
-        date: { type: Date, default: Date.now }
+        date: { type: Date}
     }],
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user' }
-}, { timestamps: true });
+}, { timestamps: true, versionKey: false });
 
 // Add index for better search performance
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });

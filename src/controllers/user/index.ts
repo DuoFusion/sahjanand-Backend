@@ -18,22 +18,15 @@ export const login = async (req, res) => {
 
         // Check password
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(400).json(new apiResponse(400, 'Invalid email or password', {}, {}));
-        }
+        if (!isPasswordValid) return res.status(400).json(new apiResponse(400, 'Invalid email or password', {}, {}));
 
-        // Check if user is admin
-        if (!user.isAdmin) {
-            return res.status(403).json(new apiResponse(403, 'Access denied. Admin privileges required.', {}, {}));
-        }
 
+        if (!user.isAdmin) return res.status(403).json(new apiResponse(403, 'Access denied. Admin privileges required.', {}, {}));
+        
         // Get user role
         const role = await roleModel.findById(user.role);
-        if (!role) {
-            return res.status(400).json(new apiResponse(400, 'Role not found', {}, {}));
-        }
+        if (!role) return res.status(400).json(new apiResponse(400, 'Role not found', {}, {}));
 
-        // Generate token
         const token = jwt.sign(
             { 
                 id: user._id,
@@ -45,7 +38,6 @@ export const login = async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        // Update last login
         await userModel.findByIdAndUpdate(user._id, { 
             lastLogin: new Date(),
             isLoggedIn: true

@@ -4,8 +4,8 @@ export const validateBanner = (req, res, next) => {
     const schema = Joi.object({
         type: Joi.string().valid('hero', 'offer', 'collection', 'section').required(),
         title: Joi.string().required(),
-        imageDesktop: Joi.string().uri().required(),
-        imageMobile: Joi.string().uri().required(),
+        imageDesktop: Joi.string().uri(),
+        imageMobile: Joi.string().uri(),
         priority: Joi.number().integer().min(0),
         linkType: Joi.string().valid('product', 'collection', 'page', 'none').default('none'),
         linkId: Joi.string().when('linkType', { is: Joi.string().valid('none'), then: Joi.optional(), otherwise: Joi.string().required() }),

@@ -16,6 +16,6 @@ const roleSchema = new mongoose.Schema({
     isDeleted: { type: Boolean, default: false },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user' }
-}, { timestamps: true });
+}, { timestamps: true, versionKey: false });
 
 export const roleModel = mongoose.model('role', roleSchema); 

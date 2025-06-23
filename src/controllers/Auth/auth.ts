@@ -10,7 +10,6 @@ import { config } from '../../../config'
 const ObjectId = require('mongoose').Types.ObjectId
 const jwt_token_secret = config.JWT_TOKEN_SECRET
 
-
 export const signUp = async (req: Request, res: Response) => {
     reqInfo(req)
     try {
@@ -61,44 +60,7 @@ export const signUp = async (req: Request, res: Response) => {
     }
 }
 
-export const otp_verification = async (req: Request, res: Response) => {
-    reqInfo(req)
-    let body = req.body
-    try {
-        body.isActive = true
-        let data = await userModel.findOne(body);
-        if (!data) return res.status(400).json(new apiResponse(400, responseMessage?.invalidOTP, {}, {}))
-        if (data.isBlock == true) return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}))
-        if (new Date(data.otpExpireTime).getTime() < new Date().getTime()) return res.status(410).json(new apiResponse(410, responseMessage?.expireOTP, {}, {}))
-        if (data) {
-            let response = await userModel.findOneAndUpdate(body, { otp: null, otpExpireTime: null, isEmailVerified: true, isLoggedIn : true }, { new: true });
-            const token = jwt.sign({
-                _id: response._id,
-                type: response.userType,
-                status: "Login",
-                generatedOn: (new Date().getTime())
-            }, jwt_token_secret)
-
-            await new userSessionModel({
-                createdBy: response._id,
-            }).save()
-
-            let result = {
-                isEmailVerified: response?.isEmailVerified,
-                userType: response?.userType,
-                _id: response?._id,
-                email: response?.email,
-                token,
-            }
-            return res.status(200).json(new apiResponse(200, responseMessage?.OTPverified, result, {}))
-        }
-
-    } catch (error) {
-        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error))
-    }
-}
-
-export const login = async (req: Request, res: Response) => { //email or password // phone or password
+export const login = async (req, res) => { 
     let body = req.body,
         response: any
     reqInfo(req)
@@ -133,45 +95,6 @@ export const login = async (req: Request, res: Response) => { //email or passwor
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error))
     }
 }
-
-export const forgot_password = async (req: Request, res: Response) => {
-    reqInfo(req);
-    let body = req.body, //email or phoneNumber
-        otpFlag = 1, // OTP has already assign or not for cross-verification
-        otp = 0
-    try {
-        body.isActive = true;
-        let data = await userModel.findOne(body);
-
-        if (!data) {
-            return res.status(400).json(new apiResponse(400, responseMessage?.invalidEmail, {}, {}));
-        }
-        if (data.isBlock == true) {
-            return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
-        }
-
-        while (otpFlag == 1) {
-            for (let flag = 0; flag < 1;) {
-                otp = await Math.round(Math.random() * 1000000);
-                if (otp.toString().length == 6) {
-                    flag++;
-                }
-            }
-            let isAlreadyAssign = await userModel.findOne({ otp: otp });
-            if (isAlreadyAssign?.otp != otp) otpFlag = 0;
-        }
-        let response: any = {sendMail : true}
-        if (response) {
-            await userModel.findOneAndUpdate(body, { otp, otpExpireTime: new Date(new Date().setMinutes(new Date().getMinutes() + 10)) })
-            return res.status(200).json(new apiResponse(200, `${response}`, {}, {}));
-        }
-        else return res.status(501).json(new apiResponse(501, responseMessage?.errorMail, {}, `${response}`));
-    } catch (error) {
-        return res
-            .status(500)
-            .json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
-    }
-};
 
 export const reset_password = async (req: Request, res: Response) => {
     reqInfo(req)
