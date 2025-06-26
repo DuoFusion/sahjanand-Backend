@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const blogSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
+    title: { type: String, },
+    content: { type: String, },
+    slug: { type: String, unique: true },
     metaTitle: { type: String },
     metaDescription: { type: String },
     metaKeywords: [{ type: String }],
@@ -13,6 +13,7 @@ const blogSchema = new mongoose.Schema({
     status: { type: String, enum: ['draft', 'published', 'scheduled'], default: 'draft' },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     isDeleted: { type: Boolean, default: false },
-}, { timestamps: true });
+    isBlocked: { type: Boolean, default: false },
+}, { timestamps: true, versionKey: false });
 
-export const blogModel = mongoose.model('blog', blogSchema); 
+export const blogModel = mongoose.model('blog', blogSchema);

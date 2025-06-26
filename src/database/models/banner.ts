@@ -7,9 +7,9 @@ const bannerSchema = new mongoose.Schema({
     imageMobile: { type: String, required: true },
     priority: { type: Number, default: 0 },
     linkType: { type: String, enum: ['product', 'collection', 'page', 'none'], default: 'none' },
-    linkId: { type: mongoose.Schema.Types.ObjectId, refPath: 'linkType',},
+    linkId: { type: mongoose.Schema.Types.ObjectId, refPath: 'linkType', },
     isDeleted: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
-}, { timestamps: true });
+}, { timestamps: true, versionKey: false });
 
-export const    bannerModel = mongoose.model('banner', bannerSchema); 
+export const bannerModel = mongoose.model('banner', bannerSchema); 

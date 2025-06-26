@@ -25,6 +25,6 @@ const userSchema: any = new mongoose.Schema({
     isBlocked: { type: Boolean, default: false },
     isLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date },
-}, { timestamps: true })
+}, { timestamps: true, versionKey: false })
 
 export const userModel = mongoose.model('user', userSchema);

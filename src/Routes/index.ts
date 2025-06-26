@@ -26,6 +26,6 @@ router.use('/terms-condition', termsConditionRoutes)
 router.use('/return-policy', returnPolicyRoutes)
 router.use('/upload', uploadRoutes)
 router.use('/collection', collectionRoutes)
-router.use('/blogs', blogRoutes)
+router.use('/blog', blogRoutes)
 
 export { router }
