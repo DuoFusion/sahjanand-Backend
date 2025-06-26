@@ -3,8 +3,9 @@ const mongoose = require('mongoose');
 const blogSchema = new mongoose.Schema({
     title: { type: String, },
     content: { type: String, },
-    slug: { type: String, unique: true },
+    slug: { type: String },
     metaTitle: { type: String },
+    image: { type: String },
     metaDescription: { type: String },
     metaKeywords: [{ type: String }],
     category: { type: String },

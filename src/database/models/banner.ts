@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 const bannerSchema = new mongoose.Schema({
-    type: { type: String, enum: ['hero', 'offer', 'collection', 'section'], required: true },
+    type: { type: String, enum: ['hero', 'offer', 'collection', 'section']},
     title: { type: String, required: true },
     imageDesktop: { type: String, required: true },
     imageMobile: { type: String, required: true },
@@ -12,4 +12,4 @@ const bannerSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true },
 }, { timestamps: true, versionKey: false });
 
-export const bannerModel = mongoose.model('banner', bannerSchema); 
+export const bannerModel = mongoose.model('banner', bannerSchema);

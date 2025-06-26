@@ -32,7 +32,7 @@ export const updateBlog = async (req, res) => {
 export const deleteBlog = async (req, res) => {
     reqInfo(req)
     try {
-        const blog = await blogModel.findOneAndUpdate({ _id: req.params.id }, { isDeleted: true }, { new: true });
+        const blog = await blogModel.findOneAndUpdate({ _id: new ObjectId(req.params.id), isDeleted: false }, { isDeleted: true }, { new: true });
         if (!blog) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Blog'), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Blog'), blog, {}));
     } catch (error) {
