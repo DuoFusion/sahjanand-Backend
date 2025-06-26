@@ -1,6 +1,6 @@
 import { apiResponse } from '../../common';
 import { productModel } from '../../database';
-import { createData, getData, getDataWithSorting, reqInfo, responseMessage, updateData, deleteData } from '../../helper';
+import { createData, getData, getDataWithSorting, reqInfo, responseMessage, updateData, deleteData, countData } from '../../helper';
 import slugify from 'slugify';
 
 let ObjectId = require('mongoose').Types.ObjectId;
@@ -26,7 +26,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
     reqInfo(req)
     try {
-        const { id } = req.params;
+        const { productId } = req.body;
         const body = req.body;
 
         // Update slug if name is changed
@@ -34,7 +34,7 @@ export const updateProduct = async (req, res) => {
             body.slug = slugify(body.name, { lower: true, strict: true });
         }
 
-        const response = await updateData(productModel, { _id: id }, body, {});
+        const response = await updateData(productModel, { _id: new ObjectId(productId) }, body, {});
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Product'), response, {}));
     } catch (error) {
         console.log(error);
@@ -57,12 +57,12 @@ export const deleteProduct = async (req, res) => {
 export const getProducts = async (req, res) => {
     reqInfo(req)
     try {
-        const { category, subCategory, tag, color, size, material, fabric, occasion, sort, limit = 20, page = 1, showOnHomepage } = req.query;
+        const { category, subCategory, tag, color, size, material, fabric, occasion, sort, limit, page, showOnHomepage, search } = req.query;
 
         const criteria: any = { isDeleted: false };
 
-        if (category) criteria.category = category;
-        if (subCategory) criteria.subCategory = subCategory;
+        if (category) criteria.categoryId = category;
+        if (subCategory) criteria.subCategoryId = subCategory;
         if (tag) criteria.tags = tag;
         if (color) criteria['attributes.color'] = color;
         if (size) criteria['attributes.size'] = size;
@@ -71,14 +71,34 @@ export const getProducts = async (req, res) => {
         if (occasion) criteria['attributes.occasion'] = occasion;
         if (showOnHomepage) criteria.showOnHomepage = showOnHomepage === 'true';
 
+        if (search) {
+            criteria.$or = [
+                { name: { $regex: search, $options: 'si' } },
+                { description: { $regex: search, $options: 'si' } },
+                { tags: { $regex: search, $options: 'si' } }
+            ];
+        }
+
+        // Parse pagination params
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 20;
+
         const options = {
-            skip: (page - 1) * limit,
-            limit: parseInt(limit),
+            skip: (pageNum - 1) * limitNum,
+            limit: limitNum,
             sort: sort ? JSON.parse(sort) : { createdAt: -1 }
         };
 
         const response = await getDataWithSorting(productModel, criteria, {}, options);
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Products'), response, {}));
+        const totalCount = await countData(productModel, criteria);
+
+        const stateObj = {
+            page: pageNum,
+            limit: limitNum,
+            page_limit: Math.ceil(totalCount / limitNum) || 1,
+        };
+
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Products'), { product_data: response, totalData: totalCount, state: stateObj }, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
