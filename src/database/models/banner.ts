@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 const bannerSchema = new mongoose.Schema({
-    type: { type: String, enum: ['hero', 'offer', 'collection', 'section']},
+    type: { type: String, enum: ['hero', 'offer', 'collection', 'section'], required: true },
     title: { type: String, required: true },
     imageDesktop: { type: String, required: true },
     imageMobile: { type: String, required: true },

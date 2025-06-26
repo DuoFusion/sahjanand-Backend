@@ -4,10 +4,10 @@ import { validateBanner, validateSortBanners } from '../validation';
 
 const router = express.Router();
 
-router.get('/', bannerController.getBanners);
-router.post('/add', validateBanner, bannerController.createBanner);
-router.post('/sort', validateSortBanners, bannerController.sortBanners);
-router.put('/:id', validateBanner, bannerController.updateBanner);
+router.post('/add', bannerController.createBanner);
+router.post('/edit', bannerController.updateBanner);
 router.delete('/:id', bannerController.deleteBanner);
+router.get('/', bannerController.getBanners);
+router.post('/sort', bannerController.sortBanners);
 
-export default router; 
+export const bannerRoutes = router; 
