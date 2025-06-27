@@ -1,5 +1,4 @@
 "use strict"
-import { cmsRoutes } from './cms'
 import express from 'express'
 import { roleRoutes } from './role'
 import { userRoutes } from './user'
@@ -20,7 +19,6 @@ router.use('/user', userRoutes)
 router.use('/role', roleRoutes)
 router.use('/category', categoryRoutes)
 router.use('/product', productRoutes)
-router.use('/cms', cmsRoutes)
 router.use('/about-us', aboutUsRoutes)
 router.use('/privacy-policy', privacyPolicyRoutes)
 router.use('/terms-condition', termsConditionRoutes)
