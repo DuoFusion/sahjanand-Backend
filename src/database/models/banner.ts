@@ -9,7 +9,7 @@ const bannerSchema = new mongoose.Schema({
     linkType: { type: String, enum: ['product', 'collection', 'page', 'none'], default: 'none' },
     linkId: { type: mongoose.Schema.Types.ObjectId, refPath: 'linkType', },
     isDeleted: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: true },
+    isBlocked: { type: Boolean, default: false },
 }, { timestamps: true, versionKey: false });
 
 export const bannerModel = mongoose.model('banner', bannerSchema);

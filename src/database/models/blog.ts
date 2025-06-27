@@ -12,7 +12,6 @@ const blogSchema = new mongoose.Schema({
     tags: [{ type: String }],
     scheduledAt: { type: Date },
     status: { type: String, enum: ['draft', 'published', 'scheduled'], default: 'draft' },
-    author: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
 }, { timestamps: true, versionKey: false });

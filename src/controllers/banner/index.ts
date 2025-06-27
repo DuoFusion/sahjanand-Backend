@@ -8,7 +8,11 @@ export const createBanner = async (req, res) => {
     reqInfo(req);
     try {
         const body = req.body;
-        const response = await createData(bannerModel, body);
+
+        let isExist = await bannerModel.findOne({ type: body.type, priority: body.priority, isDeleted: false });
+        if (isExist) return res.status(400).json(new apiResponse(400, responseMessage.dataAlreadyExist('priority'), {}, {}));
+
+        const response = await createData(bannerModel, body)
         return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Banner'), response, {}));
     } catch (error) {
         console.log(error);
@@ -20,6 +24,10 @@ export const updateBanner = async (req, res) => {
     reqInfo(req);
     try {
         const body = req.body;
+
+        let isExist = await bannerModel.findOne({ type: body.type, priority: body.priority, isDeleted: false, _id: { $ne: new ObjectId(body.bannerId) } });
+        if (isExist) return res.status(400).json(new apiResponse(400, responseMessage.dataAlreadyExist('priority'), {}, {}));
+
         const response = await updateData(bannerModel, { _id: new ObjectId(body.bannerId) }, body, {});
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Banner'), response, {}));
     } catch (error) {
