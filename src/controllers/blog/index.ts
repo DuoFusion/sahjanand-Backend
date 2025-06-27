@@ -9,7 +9,7 @@ export const addBlog = async (req, res) => {
     try {
         const blog = new blogModel(req.body);
         await blog.save();
-        return res.status(201).json(new apiResponse(201, responseMessage.addDataSuccess('Blog'), blog, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Blog'), blog, {}));
     } catch (error) {
         console.log(error);
         return res.status(400).json(new apiResponse(400, responseMessage.internalServerError, {}, error));
