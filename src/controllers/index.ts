@@ -1,7 +1,6 @@
 // export * as userController from './user/index'
 export * as authController from "./Auth"
 export * as adminController from "./admin"
-export * as cmsController from "./cms"
 export * as productController from "./product"
 export * as categoryController from "./category"
 export * as aboutUsController from "./about-us"

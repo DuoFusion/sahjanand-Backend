@@ -1,6 +1,5 @@
 export * from './user'
 export * from "./user_session"
-export * from "./cms"
 export * from "./product"
 export * from "./category"
 export * from "./role"
