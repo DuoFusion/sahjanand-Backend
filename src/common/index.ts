@@ -17,3 +17,16 @@ export const userStatus = {
     admin: "admin",
     upload: "upload"
 }
+
+export const FAQ_CATEGORIES = {
+    GENERAL: 'general',
+    ORDERS: 'orders',
+    PAYMENTS: 'payments',
+    SHIPPING: 'shipping',
+    RETURNS: 'returns',
+    PRODUCTS: 'products',
+    ACCOUNT: 'account',
+    TECHNICAL: 'technical',
+    PRICING: 'pricing',
+    SECURITY: 'security'
+}
