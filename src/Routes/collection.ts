@@ -5,7 +5,7 @@ import { collectionController } from '../controllers';
 const router = Router();
 
 router.post('/', collectionController.addCollection);
-router.put('/:id', collectionController.updateCollection);
+router.post('/edit', collectionController.updateCollection);
 router.delete('/:id', collectionController.deleteCollection);
 router.post('/:id/products', collectionController.assignProductsToCollection);
 router.delete('/:id/products/:productId', collectionController.removeProductFromCollection);

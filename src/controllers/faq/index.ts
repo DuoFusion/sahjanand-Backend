@@ -38,7 +38,7 @@ export const edit_faq = async (req, res) => {
         let isExist = await faqModel.findOne({ priority: value.priority, isDeleted: false, _id: { $ne: new ObjectId(value.faqId) } })
         if (isExist) return res.status(400).json(new apiResponse(400, responseMessage?.dataAlreadyExist("priority"), {}, {}))
 
-        const response = await faqModel.findOneAndUpdate({ _id: new ObjectId(id), isDeleted: false }, value, { new: true })
+        const response = await faqModel.findOneAndUpdate({ _id: new ObjectId(value.faqId), isDeleted: false }, value, { new: true })
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("FAQ"), {}, {}))
 
         return res.status(200).json(new apiResponse(200, responseMessage?.updateDataSuccess("FAQ"), response, {}))
