@@ -29,8 +29,6 @@ export const add_faq = async (req, res) => {
 
 export const edit_faq = async (req, res) => {
     reqInfo(req)
-    let { id } = req.params
-
     try {
         const { error, value } = addEditFaqSchema.validate(req.body)
         if (error) return res.status(501).json(new apiResponse(501, error?.details[0]?.message, {}, {}))
