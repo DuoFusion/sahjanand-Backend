@@ -1,6 +1,9 @@
 import { apiResponse } from '../../common';
 import { collectionModel } from '../../database';
 import { reqInfo, responseMessage } from '../../helper';
+import { getData, countData } from '../../helper/database_service';
+
+const ObjectId = require('mongoose').Types.ObjectId;
 
 export const addCollection = async (req, res) => {
     reqInfo(req);
@@ -16,10 +19,10 @@ export const addCollection = async (req, res) => {
 
 export const updateCollection = async (req, res) => {
     reqInfo(req);
+    let body = req.body;
     try {
-        const { id } = req.params;
-        const body = req.body;
-        const collection = await collectionModel.findByIdAndUpdate(id, body, { new: true });
+        const collection = await collectionModel.findOneAndUpdate({ _id: new ObjectId(body.collectionId), isDeleted: false }, body, { new: true });
+        if (!collection) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Collection'), collection, {}));
     } catch (error) {
         console.log(error)
@@ -87,11 +90,44 @@ export const getCollectionProducts = async (req, res) => {
 
 export const getCollections = async (req, res) => {
     reqInfo(req);
+    let { page, limit, search, type } = req.query, criteria: any = {};
+    let options: any = { lean: true };
+
     try {
-        const collections = await collectionModel.find().sort({ priority: 1 });
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collections, {}));
+        if (type) {
+            criteria.type = type;
+        }
+
+        if (search) {
+            criteria.$or = [
+                { name: { $regex: search, $options: 'si' } },
+                { description: { $regex: search, $options: 'si' } }
+            ];
+        }
+
+        options.sort = { priority: 1, createdAt: -1 };
+
+        if (page && limit) {
+            options.skip = (parseInt(page) - 1) * parseInt(limit);
+            options.limit = parseInt(limit);
+        }
+
+        const response = await getData(collectionModel, criteria, {}, options);
+        const totalCount = await countData(collectionModel, criteria);
+
+        const stateObj = {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || totalCount,
+            page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
+        };
+
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), {
+            collection_data: response, 
+            totalData: totalCount, 
+            state: stateObj 
+        }, {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
-}; 
+};
