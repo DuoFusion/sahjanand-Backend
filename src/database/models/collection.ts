@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const collectionSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    type: { type: String, enum: ['our', 'occasion', 'material', 'color', 'theme'], required: true },
+    name: { type: String },
+    type: { type: String, enum: ['our', 'occasion', 'material', 'color', 'theme'] },
     description: { type: String },
     image: { type: String }, // URL to banner image
     isVisible: { type: Boolean, default: true },
