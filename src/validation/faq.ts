@@ -8,7 +8,7 @@ export const addEditFaqSchema = Joi.object().keys({
     isActive: Joi.boolean().optional().default(true)
 })
 
-export const updateFaqStatusSchema = Joi.object().keys({
+export const updateFaqSchema = Joi.object().keys({
     faqId: Joi.string().required(),
     question: Joi.string().optional(),
     answer: Joi.string().optional(),

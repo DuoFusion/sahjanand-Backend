@@ -1,6 +1,6 @@
 import { reqInfo, responseMessage } from "../../helper";
 import { faqModel } from "../../database/models";
-import { addEditFaqSchema, updateFaqStatusSchema, getFaqByCategorySchema } from "../../validation";
+import { addEditFaqSchema, getFaqByCategorySchema, updateFaqSchema } from "../../validation";
 import { apiResponse } from "../../common";
 import { getData, countData } from "../../helper/database_service";
 
@@ -30,7 +30,7 @@ export const add_faq = async (req, res) => {
 export const edit_faq = async (req, res) => {
     reqInfo(req)
     try {
-        const { error, value } = addEditFaqSchema.validate(req.body)
+        const { error, value } = updateFaqSchema.validate(req.body)
         if (error) return res.status(501).json(new apiResponse(501, error?.details[0]?.message, {}, {}))
 
         let isExist = await faqModel.findOne({ priority: value.priority, isDeleted: false, _id: { $ne: new ObjectId(value.faqId) } })
@@ -138,29 +138,6 @@ export const get_faq_by_id = async (req, res) => {
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("FAQ"), {}, {}))
 
         return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("FAQ"), response, {}))
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error))
-    }
-}
-
-export const update_faq_status = async (req, res) => {
-    reqInfo(req)
-    let { user } = req.headers
-    let { id } = req.params
-
-    try {
-        const { error, value } = updateFaqStatusSchema.validate(req.body)
-        if (error) return res.status(501).json(new apiResponse(501, error?.details[0]?.message, {}, {}))
-
-        const response = await faqModel.findOneAndUpdate(
-            { _id: new ObjectId(id), isDeleted: false },
-            { isActive: value.isActive },
-            { new: true }
-        )
-        if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("FAQ"), {}, {}))
-
-        return res.status(200).json(new apiResponse(200, responseMessage?.updateDataSuccess("FAQ status"), response, {}))
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error))

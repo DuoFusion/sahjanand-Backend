@@ -10,4 +10,4 @@ const collectionSchema = new mongoose.Schema({
     priority: { type: Number, default: 0 },
 }, { timestamps: true, versionKey: false });
 
-export const collectionModel = mongoose.model('collection', collectionSchema); 
+export const collectionModel = mongoose.model('collection', collectionSchema);
