@@ -78,7 +78,7 @@ export const get_all_users = async(req, res)=> {
         }
 
         options.sort = { createdAt: -1 };
-        options.isDeleted = false
+        criteria.isDeleted = false
 
         let role = await roleModel.findOne({ name: ADMIN_ROLES.USER, isDeleted: false }).lean()
         criteria.roleId = new ObjectId(role?._id)
