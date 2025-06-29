@@ -14,7 +14,7 @@ const userSchema: any = new mongoose.Schema({
     profilePhoto: { type: String },
     password: { type: String },
     roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'role' },
-    userType: { type: String, enum: ['admin', 'manager', 'user'], default: 'user' },
+    userType: { type: String, default: 'user' },
     socialMedia: {
         facebook: { type: String },
         twitter: { type: String },
@@ -23,7 +23,6 @@ const userSchema: any = new mongoose.Schema({
     },
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
-    isLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date },
 }, { timestamps: true, versionKey: false })
 

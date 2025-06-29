@@ -20,6 +20,8 @@ export const add_edit_about_us = async (req, res) => {
 
 export const get_about_us = async (req, res) => {
     reqInfo(req)
+    let { user } = req.headers
+    console.log("user", user);
     try {
         const response = await aboutUsModel.findOne({ isDeleted: false })
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("about us"), {}, {}))

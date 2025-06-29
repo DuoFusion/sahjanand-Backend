@@ -1,14 +1,14 @@
 import express from 'express';
-import { login, createManager, logout } from '../controllers/user';
-import { loginSchema, createManagerSchema } from '../validation/user';
+import { userController } from '../controllers';
+import { adminJWT } from '../helper';
 
 const router = express.Router();
 
-// Public routes
-router.post('/login', login);
-router.post('/logout', logout);
+router.post('/add', userController.add_user);
 
-// Protected routes
-router.post('/manager/create', createManager);
+router.use(adminJWT)
+router.post('/edit', userController.edit_user_by_id);
+router.get('/', userController.get_all_users);
+router.get('/:id', userController.get_user_by_id);
 
 export const userRoutes = router; 

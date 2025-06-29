@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { collectionController } from '../controllers';
 
-
 const router = Router();
 
 router.post('/add', collectionController.addCollection);

@@ -1,6 +1,4 @@
 import jwt from 'jsonwebtoken'
-// import { userModel } from '../database'
-import mongoose from 'mongoose'
 import { apiResponse } from '../common'
 import { Request, Response } from 'express'
 import { responseMessage } from './response'
@@ -11,16 +9,15 @@ const ObjectId = require('mongoose').Types.ObjectId
 const jwt_token_secret = config.JWT_TOKEN_SECRET;
 
 export const adminJWT = async (req: Request, res: Response, next) => {
-    let { authorization, userType } = req.headers,
+    let { authorization } = req.headers,
         result: any
     if (authorization) {
         try {
             let isVerifyToken = jwt.verify(authorization, jwt_token_secret)
 
-            result = await userModel.findOne({ _id: ObjectId(isVerifyToken._id), isDeleted: false })
-            if (result?.isBlocked == true) return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
+            result = await userModel.findOne({ _id: new ObjectId(isVerifyToken._id), isDeleted: false }).populate("roleId").lean()
+            if (result?.isBlocked == true) return res.status(410).json(new apiResponse(410, responseMessage?.accountBlock, {}, {}));
             if (result?.isDeleted == false) {
-                // Set in Header Decode Token Information
                 req.headers.user = result
                 return next()
             } else {

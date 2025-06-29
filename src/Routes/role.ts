@@ -1,13 +1,12 @@
 import express from 'express';
-import { createRole, getRoles, updateRole, deleteRole, getRoleById } from '../controllers/role';
+import { roleController } from '../controllers';
 
 const router = express.Router();
 
-// Role management routes with permission checks
-router.post('/create', createRole);
-router.get('/list', getRoles);
-router.get('/:id', getRoleById);
-router.put('/:id', updateRole);
-router.delete('/:id', deleteRole);
+router.post('/add', roleController.add_role);
+router.post('/:id', roleController.edit_role_by_id);
+router.delete('/:id', roleController.delete_role_by_id);
+router.get('/', roleController.get_all_role);
+router.get('/:id', roleController.get_by_id_role);
 
 export const roleRoutes = router; 

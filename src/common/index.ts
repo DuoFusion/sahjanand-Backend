@@ -18,6 +18,13 @@ export const userStatus = {
     upload: "upload"
 }
 
+
+export const ADMIN_ROLES = {
+    ADMIN: "admin",
+    MANAGER: "manager",
+    USER: "user"
+}
+
 export const FAQ_CATEGORIES = {
     GENERAL: 'general',
     ORDERS: 'orders',

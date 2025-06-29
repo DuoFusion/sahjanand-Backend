@@ -1,5 +1,7 @@
 "use strict"
 import express from 'express'
+import { adminJWT } from '../helper'
+import { authRoutes } from './auth'
 import { roleRoutes } from './role'
 import { userRoutes } from './user'
 import { aboutUsRoutes } from './about-us'
@@ -16,7 +18,10 @@ import { faqRoutes } from './faq'
 
 const router = express.Router()
 
+router.use('/auth', authRoutes)
+
 router.use('/user', userRoutes)
+router.use(adminJWT)
 router.use('/role', roleRoutes)
 router.use('/category', categoryRoutes)
 router.use('/product', productRoutes)

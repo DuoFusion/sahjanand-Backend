@@ -90,9 +90,7 @@ export const getCollectionProducts = async (req, res) => {
 
 export const getCollections = async (req, res) => {
     reqInfo(req);
-    let { page, limit, search, type } = req.query, criteria: any = {};
-    let options: any = { lean: true };
-
+    let { page, limit, search, type } = req.query, criteria: any = {}, options: any = { lean: true };
     try {
         if (type) {
             criteria.type = type;

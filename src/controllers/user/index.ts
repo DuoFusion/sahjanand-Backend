@@ -1,120 +1,121 @@
-import { apiResponse } from '../../common';
-import { userModel, roleModel } from '../../database';
-import { createData, reqInfo, responseMessage } from '../../helper';
+import { ADMIN_ROLES, apiResponse } from '../../common';
+import { userModel, roleModel, collectionModel } from '../../database';
+import { countData, getData, reqInfo, responseMessage } from '../../helper';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { config } from '../../../config';
 
-export const login = async (req, res) => {
+const ObjectId = require("mongoose").Types.ObjectId
+
+export const add_user = async(req, res)=> {
     reqInfo(req)
     try {
-        const { email, password } = req.body;
+        let body = req.body
+        let role = await roleModel.findOne({ name: ADMIN_ROLES.USER, isDeleted: false })
 
-        // Find user
-        const user = await userModel.findOne({ email, isDeleted: false });
-        if (!user) {
-            return res.status(400).json(new apiResponse(400, 'Invalid email or password', {}, {}));
+        let isExist = await userModel.findOne({ email: body?.email, roleId: new ObjectId(role?._id), isDeleted: false })
+        if(isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("email"), {}, {}))
+
+        isExist = await userModel.findOne({ phoneNumber: body?.phoneNumber, roleId: new ObjectId(role?._id), isDeleted: false })
+        if(isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("phoneNumber"), {}, {}))
+
+        body.userType = ADMIN_ROLES.USER
+        let password = await bcrypt.hash(body?.password, 10)
+        body.password = password
+        body.roleId = new ObjectId(role?._id)
+
+        let response = await new userModel(body).save()
+        if(!response) return res.status(404).json(new apiResponse(404, responseMessage?.addDataError, {}, {}))
+        return res.status(200).json(new apiResponse(200, responseMessage?.addDataSuccess("user"), response, {}))
+    } catch(error){
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
+    }
+}
+
+export const edit_user_by_id = async(req, res)=> {
+    reqInfo(req)
+    try {
+        let body = req.body
+
+        let role = await roleModel.findOne({ name: ADMIN_ROLES.USER, isDeleted: false });
+
+        let isExist = await userModel.findOne({ email: body?.email, roleId: new ObjectId(role?._id), isDeleted: false, _id: {$ne: new ObjectId(body?.userId)} })
+        if(isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("email"), {}, {}))
+
+        isExist = await userModel.findOne({ phoneNumber: body?.phoneNumber, roleId: new ObjectId(role?._id), isDeleted: false, _id: {$ne: new ObjectId(body?.userId)} })
+        if(isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("phoneNumber"), {}, {}))
+
+        if(body?.password){
+            let password = await bcrypt.hash(body?.password, 10)
+            body.password = password
+        }
+        body.roleId = new ObjectId(role?._id)
+
+        let response = await userModel.findOneAndUpdate({ _id: new ObjectId(body?.userId) }, body, { new: true })
+        if(!response) return res.status(404).json(new apiResponse(404, responseMessage?.addDataError, {}, {}))
+        return res.status(200).json(new apiResponse(200, responseMessage?.addDataSuccess("user"), response, {}))
+    } catch(error){
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
+    }
+}
+
+export const get_all_users = async(req, res)=> {
+    reqInfo(req)
+    let { page, limit, search } = req.query, criteria: any = {}, options: any = { lean: true }, { user } = req.headers
+    try {
+
+        if(user?.roleId?.name === ADMIN_ROLES.USER){
+            criteria._id = new ObjectId(user?._id)
         }
 
-        // Check password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(400).json(new apiResponse(400, 'Invalid email or password', {}, {}));
+        if (search) {
+            criteria.$or = [
+                { firstName: { $regex: search, $options: 'si' } },
+                { lastName: { $regex: search, $options: 'si' } },
+                { email: { $regex: search, $options: 'si' } },
+                { phoneNumber: { $regex: search, $options: 'si' } }
+            ];
+        }
 
+        options.sort = { createdAt: -1 };
 
-        if (!user.isAdmin) return res.status(403).json(new apiResponse(403, 'Access denied. Admin privileges required.', {}, {}));
-        
-        // Get user role
-        const role = await roleModel.findById(user.role);
-        if (!role) return res.status(400).json(new apiResponse(400, 'Role not found', {}, {}));
+        let role = await roleModel.findOne({ name: ADMIN_ROLES.USER, isDeleted: false }).lean()
+        criteria.roleId = new ObjectId(role?._id)
 
-        const token = jwt.sign(
-            { 
-                id: user._id,
-                email: user.email,
-                role: role.name,
-                isSuperAdmin: user.isSuperAdmin
-            },
-            config.JWT_TOKEN_SECRET,
-            { expiresIn: '24h' }
-        );
+        if (page && limit) {
+            options.skip = (parseInt(page) - 1) * parseInt(limit);
+            options.limit = parseInt(limit);
+        }
 
-        await userModel.findByIdAndUpdate(user._id, { 
-            lastLogin: new Date(),
-            isLoggedIn: true
-        });
+        const response = await getData(userModel, criteria, {}, options);
+        const totalCount = await countData(userModel, criteria);
 
-        return res.status(200).json(new apiResponse(200, 'Login successful', {
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: role.name,
-                isSuperAdmin: user.isSuperAdmin,
-                permissions: role.permissions
-            }
+        const stateObj = {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || totalCount,
+            page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
+        };
+
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('User'), {
+            user_data: response, 
+            totalData: totalCount, 
+            state: stateObj 
         }, {}));
-    } catch (error) {
+    } catch(error){
         console.log(error);
-        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
     }
-};
+}
 
-export const createManager = async (req, res) => {
+export const get_user_by_id = async(req, res)=> {
     reqInfo(req)
+    let { id } = req.params
     try {
-        const { name, email, password, roleType } = req.body;
-
-        // Check if user exists
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json(new apiResponse(400, 'Email already registered', {}, {}));
-        }
-
-        // Find role based on type
-        const role = await roleModel.findOne({ 
-            name: roleType === 'product' ? 'Product Manager' : 'Order Manager'
-        });
-        if (!role) {
-            return res.status(400).json(new apiResponse(400, 'Role not found', {}, {}));
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create user
-        const user = await createData(userModel, {
-            name,
-            email,
-            password: hashedPassword,
-            role: role._id,
-            isAdmin: true,
-            department: roleType === 'product' ? 'Product Management' : 'Order Management',
-            designation: roleType === 'product' ? 'Product Manager' : 'Order Manager'
-        });
-
-        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Manager'), {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: role.name
-        }, {}));
-    } catch (error) {
+        let response = await userModel.findOne({ _id: new ObjectId(id), isDeleted: false }).lean()
+        if(!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}))
+        return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("User"), response, {}))
+    } catch(error){
         console.log(error);
-        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
     }
-};
-
-export const logout = async (req, res) => {
-    reqInfo(req)
-    try {
-        const userId = req.user.id;
-        await userModel.findByIdAndUpdate(userId, { 
-            isLoggedIn: false
-        });
-        return res.status(200).json(new apiResponse(200, 'Logout successful', {}, {}));
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
-    }
-};
+}
