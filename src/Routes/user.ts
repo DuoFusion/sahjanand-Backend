@@ -8,7 +8,11 @@ router.post('/add', userController.add_user);
 
 router.use(adminJWT)
 router.post('/edit', userController.edit_user_by_id);
+router.post('/edit-admin', userController.edit_admin_by_id);
+router.post('/wishlist/add', userController.add_to_wishlist);
+router.post('/wishlist/edit', userController.remove_from_wishlist);
+router.get('/wishlist', userController.get_user_wishlist);
 router.get('/', userController.get_all_users);
 router.get('/:id', userController.get_user_by_id);
 
-export const userRoutes = router; 
+export const userRoutes = router;

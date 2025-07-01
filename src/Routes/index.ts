@@ -19,12 +19,12 @@ import { faqRoutes } from './faq'
 const router = express.Router()
 
 router.use('/auth', authRoutes)
-
 router.use('/user', userRoutes)
+router.use('/product', productRoutes)
+
 router.use(adminJWT)
 router.use('/role', roleRoutes)
 router.use('/category', categoryRoutes)
-router.use('/product', productRoutes)
 router.use('/about-us', aboutUsRoutes)
 router.use('/privacy-policy', privacyPolicyRoutes)
 router.use('/terms-condition', termsConditionRoutes)

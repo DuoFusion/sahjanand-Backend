@@ -21,6 +21,7 @@ const userSchema: any = new mongoose.Schema({
         instagram: { type: String },
         linkedin: { type: String },
     },
+    wishlists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'product' }],
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     lastLogin: { type: Date },
