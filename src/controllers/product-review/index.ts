@@ -1,5 +1,5 @@
 import { productReviewModel } from '../../database';
-import { apiResponse } from '../../common';
+import { ADMIN_ROLES, apiResponse } from '../../common';
 import { reqInfo, responseMessage } from '../../helper';
 
 let ObjectId = require('mongoose').Types.ObjectId;
@@ -46,11 +46,29 @@ export const deleteProductReview = async (req, res) => {
 
 export const listProductReviews = async (req, res) => {
     reqInfo(req)
+    let { page, limit, search } = req.query, { user } = req.headers;
     try {
-        const reviews = await productReviewModel.find();
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess("Product Review"), reviews, {}));
+        let criteria: any = { isDeleted: false };
+        if (user?.roleId?.name === ADMIN_ROLES.USER) {
+            criteria.userId = new ObjectId(user?._id)
+        }
+        if (search) {
+            criteria.comment = { $regex: search, $options: 'si' };
+        }
+        let query = productReviewModel.find(criteria).sort({ createdAt: -1 });
+        if (page && limit) {
+            query = query.skip((parseInt(page) - 1) * parseInt(limit)).limit(parseInt(limit));
+        }
+        const response = await query.lean();
+        const totalCount = await productReviewModel.countDocuments(criteria);
+        const stateObj = {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || totalCount,
+            page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
+        };
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Product Review'), { review_data: response, totalData: totalCount, state: stateObj }, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
-};
+}

@@ -15,6 +15,7 @@ import { categoryRoutes } from './category'
 import { productRoutes } from './product'
 import { bannerRoutes } from './banner'
 import { faqRoutes } from './faq'
+import { productReviewRoutes } from './product_review'
 
 const router = express.Router()
 
@@ -34,5 +35,6 @@ router.use('/collection', collectionRoutes)
 router.use('/blog', blogRoutes)
 router.use('/banner', bannerRoutes)
 router.use('/faq', faqRoutes)
+router.use('/product-review', productReviewRoutes)
 
 export { router }

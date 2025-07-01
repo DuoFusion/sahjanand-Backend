@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { addProductReview, editProductReview, deleteProductReview, listProductReviews } from '../controllers/product-review';
+import { productReviewController } from '../controllers';
 
 const router = Router();
 
-router.post('/', addProductReview);
-router.put('/:id', editProductReview);
-router.delete('/:id', deleteProductReview);
-router.get('/', listProductReviews);
+router.post('/add', productReviewController.addProductReview);
+router.post('/edit', productReviewController.editProductReview);
+router.delete('/delete', productReviewController.deleteProductReview);
+router.get('/', productReviewController.listProductReviews);
 
-export default router; 
+export const productReviewRoutes = router; 
