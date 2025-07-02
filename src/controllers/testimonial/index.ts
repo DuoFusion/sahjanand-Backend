@@ -45,9 +45,27 @@ export const deleteTestimonial = async (req, res) => {
 
 export const listTestimonials = async (req, res) => {
     reqInfo(req)
+    let { page, limit, search } = req.query;
+    let criteria: any = { isDeleted: false };
     try {
-        const testimonials = await testimonialModel.find();
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess("Testimonial"), testimonials, {}));
+        if (search) {
+            criteria.$or = [
+                { name: { $regex: search, $options: 'si' } },
+                { message: { $regex: search, $options: 'si' } }
+            ];
+        }
+        let query = testimonialModel.find(criteria).sort({ createdAt: -1 });
+        if (page && limit) {
+            query = query.skip((parseInt(page) - 1) * parseInt(limit)).limit(parseInt(limit));
+        }
+        const response = await query.lean();
+        const totalCount = await testimonialModel.countDocuments(criteria);
+        const stateObj = {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || totalCount,
+            page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
+        };
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess("Testimonial"), { testimonial_data: response, totalData: totalCount, state: stateObj }, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));

@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 
 const TestimonialSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    message: { type: String, required: true },
+    name: { type: String },
+    message: { type: String },
     image: { type: String },
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true, versionKey: false });

@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { addTestimonial, editTestimonial, deleteTestimonial, listTestimonials } from '../controllers/testimonial';
+import { testimonialController } from '../controllers';
 
 const router = Router();
 
-router.post('/', addTestimonial);
-router.put('/:id', editTestimonial);
-router.delete('/:id', deleteTestimonial);
-router.get('/', listTestimonials);
+router.post('/add', testimonialController.addTestimonial);
+router.post('/edit', testimonialController.editTestimonial);
+router.delete('/delete', testimonialController.deleteTestimonial);
+router.get('/', testimonialController.listTestimonials);
 
-export default router; 
+export const testimonialRoutes = router; 
