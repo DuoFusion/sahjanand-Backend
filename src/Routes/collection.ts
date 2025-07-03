@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { collectionController } from '../controllers';
+import { adminJWT } from '../helper';
 
 const router = Router();
 
+router.get('/user', collectionController.getUserCollection);
+
+router.use(adminJWT)
 router.post('/add', collectionController.addCollection);
 router.post('/edit', collectionController.updateCollection);
 router.delete('/:id', collectionController.deleteCollection);

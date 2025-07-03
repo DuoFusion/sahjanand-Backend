@@ -9,6 +9,7 @@ const collectionSchema = new mongoose.Schema({
     products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'product' }],
     priority: { type: Number, default: 0 },
     isDeleted: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
 }, { timestamps: true, versionKey: false });
 
 export const collectionModel = mongoose.model('collection', collectionSchema);

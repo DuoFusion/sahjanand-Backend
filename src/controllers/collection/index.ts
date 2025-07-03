@@ -92,6 +92,8 @@ export const getCollections = async (req, res) => {
     reqInfo(req);
     let { page, limit, search, typeFilter } = req.query, criteria: any = {}, options: any = { lean: true };
     try {
+        criteria.isDeleted = false;
+        criteria.isBlocked = false;
         if (typeFilter) {
             criteria.type = typeFilter;
         }
@@ -120,10 +122,22 @@ export const getCollections = async (req, res) => {
         };
 
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), {
-            collection_data: response, 
-            totalData: totalCount, 
-            state: stateObj 
+            collection_data: response,
+            totalData: totalCount,
+            state: stateObj
         }, {}));
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+};
+
+export const getUserCollection = async (req, res) => {
+    reqInfo(req);
+    try {
+        const collection = await collectionModel.find({ isDeleted: false, isBlocked: false });
+        if (!collection) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));

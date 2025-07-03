@@ -59,7 +59,7 @@ export const getProducts = async (req, res) => {
     try {
         const { category, subCategory, tag, color, size, material, fabric, occasion, sort, limit, page, showOnHomepage, search } = req.query;
 
-        const criteria: any = { isDeleted: false };
+        const criteria: any = { isDeleted: false, isBlocked: false };
 
         if (category) criteria.categoryId = category;
         if (subCategory) criteria.subCategoryId = subCategory;
@@ -109,7 +109,7 @@ export const getNewArrivals = async (req, res) => {
     reqInfo(req)
     try {
         const { limit = 20 } = req.query;
-        const criteria = { isDeleted: false, isNewArrival: true };
+        const criteria = { isDeleted: false, isBlocked: false, isNewArrival: true };
         const options = { limit: parseInt(limit), sort: { createdAt: -1 } };
 
         const response = await getDataWithSorting(productModel, criteria, {}, options);
@@ -124,7 +124,7 @@ export const getBestSelling = async (req, res) => {
     reqInfo(req)
     try {
         const { limit = 20 } = req.query;
-        const criteria = { isDeleted: false, isBestSelling: true };
+        const criteria = { isDeleted: false, isBlocked: false, isBestSelling: true };
         const options = { limit: parseInt(limit), sort: { rating: -1 } };
 
         const response = await getDataWithSorting(productModel, criteria, {}, options);
@@ -139,15 +139,18 @@ export const searchProducts = async (req, res) => {
     reqInfo(req)
     try {
         const { search } = req.query;
-        const criteria: any = {
+        let criteria: any = {
             isDeleted: false,
-            $or: [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { tags: { $regex: search, $options: 'i' } },
-                { 'seo.keywords': { $regex: search, $options: 'i' } }
-            ]
+            isBlocked: false
         };
+        if (search) {
+            criteria.$or = [
+                    { name: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } },
+                    { tags: { $regex: search, $options: 'i' } },
+                    { 'seo.keywords': { $regex: search, $options: 'i' } }
+            ]
+        }
 
         const response = await getData(productModel, criteria, {}, {});
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Search Results'), response, {}));
@@ -163,6 +166,7 @@ export const getHomepageProducts = async (req, res) => {
     try {
         const criteria = {
             isDeleted: false,
+            isBlocked: false,
             showOnHomepage: true
         };
         const options = {
@@ -176,4 +180,4 @@ export const getHomepageProducts = async (req, res) => {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
-}; 
+};
