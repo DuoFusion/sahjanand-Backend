@@ -17,6 +17,7 @@ import { bannerRoutes } from './banner'
 import { faqRoutes } from './faq'
 import { productReviewRoutes } from './product_review'
 import { testimonialRoutes } from './testimonial'
+import { enquiryRoutes } from './enquiry'
 
 const router = express.Router()
 
@@ -27,6 +28,7 @@ router.use('/about-us', aboutUsRoutes)
 router.use('/privacy-policy', privacyPolicyRoutes)
 router.use('/terms-condition', termsConditionRoutes)
 router.use('/return-policy', returnPolicyRoutes)
+router.use('/enquiry', enquiryRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)
