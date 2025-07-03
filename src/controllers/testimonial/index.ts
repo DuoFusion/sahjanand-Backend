@@ -11,7 +11,7 @@ export const addTestimonial = async (req, res) => {
         body.userId = new ObjectId(user._id);
         const testimonial = await new testimonialModel(body).save();
         if (!testimonial) return res.status(404).json(new apiResponse(404, responseMessage.addDataError, {}, {}));
-        return res.status(201).json(new apiResponse(201, responseMessage.addDataSuccess('Testimonial'), testimonial, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Testimonial'), testimonial, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
