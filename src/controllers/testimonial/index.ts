@@ -59,7 +59,6 @@ export const getTestimonials = async (req, res) => {
             ];
         }
 
-        // Build aggregation pipeline
         const pipeline: any[] = [
             { $match: criteria },
             {
