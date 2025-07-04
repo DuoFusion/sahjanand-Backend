@@ -1,10 +1,11 @@
 var mongoose = require('mongoose');
 
 const bannerSchema = new mongoose.Schema({
-    type: { type: String, enum: ['hero', 'offer', 'collection', 'section'], required: true },
-    title: { type: String, required: true },
-    imageDesktop: { type: String, required: true },
-    imageMobile: { type: String, required: true },
+    type: { type: String, enum: ['hero', 'offer', 'collection', 'section'] },
+    title: { type: String },
+    description: { type: String },
+    imageDesktop: { type: String },
+    imageMobile: { type: String },
     priority: { type: Number, default: 0 },
     linkType: { type: String, enum: ['product', 'collection', 'page', 'none'], default: 'none' },
     linkId: { type: mongoose.Schema.Types.ObjectId, refPath: 'linkType', },
