@@ -29,6 +29,7 @@ router.use('/privacy-policy', privacyPolicyRoutes)
 router.use('/terms-condition', termsConditionRoutes)
 router.use('/return-policy', returnPolicyRoutes)
 router.use('/enquiry', enquiryRoutes)
+router.use('/testimonial', testimonialRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)
@@ -39,6 +40,5 @@ router.use('/blog', blogRoutes)
 router.use('/banner', bannerRoutes)
 router.use('/faq', faqRoutes)
 router.use('/product-review', productReviewRoutes)
-router.use('/testimonial', testimonialRoutes)
 
 export { router }
