@@ -1,6 +1,7 @@
 import { productReviewModel } from '../../database';
 import { ADMIN_ROLES, apiResponse } from '../../common';
 import { reqInfo, responseMessage } from '../../helper';
+import { aggregateData, countData } from '../../helper/database_service';
 
 let ObjectId = require('mongoose').Types.ObjectId;
 
@@ -55,17 +56,140 @@ export const listProductReviews = async (req, res) => {
         if (search) {
             criteria.comment = { $regex: search, $options: 'si' };
         }
-        let query = productReviewModel.find(criteria).sort({ createdAt: -1 });
+
+        const pipeline: any[] = [
+            { $match: criteria },
+            {
+                $lookup: {
+                    from: "users",
+                    let: { userId: "$userId" },
+                    pipeline: [
+                        {
+                            $match: { $expr: { $and: [{ $eq: ['$_id', '$$userId'] },], }, },
+                        },
+                        {
+                            $project: { _id: 1, firstName: 1, lastName: 1, email: 1, profilePhoto: 1, userType: 1 }
+                        }
+                    ],
+                    as: "user"
+                }
+            },
+            {
+                $unwind: { path: "$user", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    let: { productId: "$productId" },
+                    pipeline: [
+                        {
+                            $match: { $expr: { $and: [{ $eq: ['$_id', '$$productId'] },], }, },
+                        },
+                        {
+                            $project: { _id: 1, name: 1, images: 1 }
+                        }
+                    ],
+                    as: "product"
+                }
+            },
+            {
+                $unwind: { path: "$product", preserveNullAndEmptyArrays: true }
+            },
+            { $sort: { createdAt: -1 } }
+        ];
+
+        // Add pagination to pipeline if page and limit are provided
         if (page && limit) {
-            query = query.skip((parseInt(page) - 1) * parseInt(limit)).limit(parseInt(limit));
+            pipeline.push(
+                { $skip: (parseInt(page) - 1) * parseInt(limit) },
+                { $limit: parseInt(limit) }
+            );
         }
-        const response = await query.lean();
-        const totalCount = await productReviewModel.countDocuments(criteria);
+
+        const response = await aggregateData(productReviewModel, pipeline);
+        const totalCount = await countData(productReviewModel, criteria);
+        
         const stateObj = {
             page: parseInt(page) || 1,
             limit: parseInt(limit) || totalCount,
             page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
         };
+        
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Product Review'), { review_data: response, totalData: totalCount, state: stateObj }, {}));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+}
+
+export const getUserProductReviews = async (req, res) => {
+    reqInfo(req)
+    let { page, limit, search } = req.query, { user } = req.headers;
+    try {
+        let criteria: any = { isDeleted: false };
+
+        if (search) {
+            criteria.comment = { $regex: search, $options: 'si' };
+        }
+
+        const pipeline: any[] = [
+            { $match: criteria },
+            {
+                $lookup: {
+                    from: "users",
+                    let: { userId: "$userId" },
+                    pipeline: [
+                        {
+                            $match: { $expr: { $and: [{ $eq: ['$_id', '$$userId'] },], }, },
+                        },
+                        {
+                            $project: { _id: 1, firstName: 1, lastName: 1, email: 1, profilePhoto: 1, userType: 1 }
+                        }
+                    ],
+                    as: "user"
+                }
+            },
+            {
+                $unwind: { path: "$user", preserveNullAndEmptyArrays: true }
+            },
+            {
+                $lookup: {
+                    from: "products",
+                    let: { productId: "$productId" },
+                    pipeline: [
+                        {
+                            $match: { $expr: { $and: [{ $eq: ['$_id', '$$productId'] },], }, },
+                        },
+                        {
+                            $project: { _id: 1, name: 1, images: 1 }
+                        }
+                    ],
+                    as: "product"
+                }
+            },
+            {
+                $unwind: { path: "$product", preserveNullAndEmptyArrays: true }
+            },
+            { $sort: { createdAt: -1 } }
+        ];
+
+        // Add pagination to pipeline if page and limit are provided
+        if (page && limit) {
+            pipeline.push(
+                { $skip: (parseInt(page) - 1) * parseInt(limit) },
+                { $limit: parseInt(limit) }
+            );
+        }
+
+        const response = await aggregateData(productReviewModel, pipeline);
+        const totalCount = await countData(productReviewModel, criteria);
+        
+        const stateObj = {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || totalCount,
+            page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
+        };
+        
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Product Review'), { review_data: response, totalData: totalCount, state: stateObj }, {}));
     } catch (error) {
         console.log(error);
