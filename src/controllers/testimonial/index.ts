@@ -35,7 +35,7 @@ export const deleteTestimonial = async (req, res) => {
     reqInfo(req)
     let { id } = req.params;
     try {
-        const testimonial = await testimonialModel.findOneAndUpdate({ _id: new ObjectId(id) }, { isActive: false }, { new: true });
+        const testimonial = await testimonialModel.findOneAndUpdate({ _id: new ObjectId(id), isDeleted: false }, { isDeleted: true }, { new: true });
         if (!testimonial) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound("Testimonial"), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess("Testimonial"), testimonial, {}));
     } catch (error) {
@@ -86,19 +86,19 @@ export const getTestimonials = async (req, res) => {
         if (page && limit) {
             const skip = (parseInt(page) - 1) * parseInt(limit);
             const limitValue = parseInt(limit);
-            pipeline.push({ $skip: skip }); 
+            pipeline.push({ $skip: skip });
             pipeline.push({ $limit: limitValue });
         }
 
         const response = await testimonialModel.aggregate(pipeline);
         const totalCount = await testimonialModel.countDocuments(criteria);
-        
+
         const stateObj = {
             page: parseInt(page) || 1,
             limit: parseInt(limit) || totalCount,
             page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
         };
-        
+
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess("Testimonial"), { testimonial_data: response, totalData: totalCount, state: stateObj }, {}));
     } catch (error) {
         console.log(error);

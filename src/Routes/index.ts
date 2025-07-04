@@ -10,7 +10,7 @@ import { termsConditionRoutes } from './terms-condition'
 import { returnPolicyRoutes } from './return-policy'
 import { uploadRoutes } from './upload'
 import { collectionRoutes } from './collection'
-import blogRoutes from './blog'
+import { blogRoutes } from './blog'
 import { categoryRoutes } from './category'
 import { productRoutes } from './product'
 import { bannerRoutes } from './banner'
@@ -18,6 +18,7 @@ import { faqRoutes } from './faq'
 import { productReviewRoutes } from './product_review'
 import { testimonialRoutes } from './testimonial'
 import { enquiryRoutes } from './enquiry'
+import { newsletterRoutes } from './newsletter'
 
 const router = express.Router()
 
@@ -33,6 +34,7 @@ router.use('/testimonial', testimonialRoutes)
 router.use('/banner', bannerRoutes)
 router.use('/product-review', productReviewRoutes)
 router.use('/collection', collectionRoutes)
+router.use('/news-letter', newsletterRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)

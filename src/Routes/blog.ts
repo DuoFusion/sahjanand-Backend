@@ -13,4 +13,4 @@ router.delete('/:id', blogController.deleteBlog);
 router.get('/', blogController.listBlogs);
 router.get('/:id', blogController.getBlog);
 
-export default router; 
+export const blogRoutes = router; 
