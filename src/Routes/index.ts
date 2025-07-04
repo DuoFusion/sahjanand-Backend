@@ -31,14 +31,14 @@ router.use('/return-policy', returnPolicyRoutes)
 router.use('/enquiry', enquiryRoutes)
 router.use('/testimonial', testimonialRoutes)
 router.use('/banner', bannerRoutes)
+router.use('/product-review', productReviewRoutes)
+router.use('/collection', collectionRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)
 router.use('/category', categoryRoutes)
 router.use('/upload', uploadRoutes)
-router.use('/collection', collectionRoutes)
 router.use('/blog', blogRoutes)
 router.use('/faq', faqRoutes)
-router.use('/product-review', productReviewRoutes)
 
 export { router }
