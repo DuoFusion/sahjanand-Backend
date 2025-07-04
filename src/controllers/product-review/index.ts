@@ -161,7 +161,7 @@ export const getUserProductReviews = async (req, res) => {
                             $match: { $expr: { $and: [{ $eq: ['$_id', '$$productId'] },], }, },
                         },
                         {
-                            $project: { _id: 1, name: 1, images: 1 }
+                            $project: { _id: 1, name: 1, images: 1, price: 1, salePrice: 1 }
                         }
                     ],
                     as: "product"
