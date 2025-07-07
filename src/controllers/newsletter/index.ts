@@ -50,8 +50,7 @@ export const getNewsletter = async (req, res) => {
 
         if (search) {
             criteria.$or = [
-                { name: { $regex: search, $options: 'si' } },
-                { message: { $regex: search, $options: 'si' } }
+                { email: { $regex: search, $options: 'si' } }
             ];
         }
 
