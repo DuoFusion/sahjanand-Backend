@@ -88,9 +88,9 @@ export const getBanners = async (req, res) => {
 export const getUserBanners = async (req, res) => {
     reqInfo(req);
     try {
-        let { type, page, limit } = req.query, options: any = { lean: true }, criteria: any = { isDeleted: false }, pageNum, limitNum;
+        let { page, limit, typeFilter } = req.query, options: any = { lean: true }, criteria: any = { isDeleted: false }, pageNum, limitNum;
 
-        if (type) criteria.type = type
+        if (typeFilter) criteria.type = typeFilter
 
         if (page && limit) {
             options.skip = (parseInt(page) - 1) * parseInt(limit);
