@@ -134,8 +134,15 @@ export const getCollections = async (req, res) => {
 
 export const getUserCollection = async (req, res) => {
     reqInfo(req);
+    let { typeFilter } = req.query;
     try {
-        const collection = await collectionModel.find({ isDeleted: false, isBlocked: false });
+        let criteria: any = {}, options: any = { lean: true };
+        criteria.isDeleted = false;
+        criteria.isBlocked = false;
+        if (typeFilter) {
+            criteria.type = typeFilter;
+        }
+        const collection = await getData(collectionModel, criteria, {}, options);
         if (!collection) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
     } catch (error) {
