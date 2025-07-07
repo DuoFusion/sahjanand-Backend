@@ -5,6 +5,7 @@ import { adminJWT } from '../helper';
 const router = express.Router();
 
 router.post('/add', userController.add_user);
+router.get('/admin/data', userController.get_admin_data);
 
 router.use(adminJWT)
 router.post('/edit', userController.edit_user_by_id);

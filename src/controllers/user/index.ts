@@ -195,7 +195,7 @@ export const edit_admin_by_id = async (req, res) => {
         let body = req.body
 
         let role = await roleModel.findOne({ name: ADMIN_ROLES.ADMIN, isDeleted: false });
-        
+
         let isExist = await userModel.findOne({ email: body?.email, roleId: new ObjectId(role?._id), isDeleted: false, _id: { $ne: new ObjectId(body?.userId) } })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("email"), {}, {}))
 
@@ -211,6 +211,19 @@ export const edit_admin_by_id = async (req, res) => {
         let response = await userModel.findOneAndUpdate({ _id: new ObjectId(body?.userId) }, body, { new: true })
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.addDataError, {}, {}))
         return res.status(200).json(new apiResponse(200, responseMessage?.addDataSuccess("user"), response, {}))
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
+    }
+}
+
+export const get_admin_data = async (req, res) => {
+    reqInfo(req)
+    try {
+        let role = await roleModel.findOne({ name: ADMIN_ROLES.ADMIN, isDeleted: false })
+        let response = await userModel.find({ roleId: new ObjectId(role?._id), isDeleted: false }).select('address city state zipCode country gender socialMedia headerOffer').lean()
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}))
+        return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("User"), response, {}))
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
