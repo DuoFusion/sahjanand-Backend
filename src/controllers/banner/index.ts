@@ -51,31 +51,58 @@ export const deleteBanner = async (req, res) => {
 export const getBanners = async (req, res) => {
     reqInfo(req);
     try {
-        const { type, isActive, search, page, limit, typeFilter } = req.query;
-        const criteria: any = { isDeleted: false };
+        let { type, search, page, limit, typeFilter } = req.query, options: any = { lean: true }, criteria: any = { isDeleted: false };
+
         if (type) criteria.type = type;
-        if (isActive !== undefined) criteria.isActive = isActive === 'true';
         if (search) {
-            criteria.title = { $regex: search, $options: 'i' };
+            criteria.title = { $regex: search, $options: 'si' };
         }
         if (typeFilter) {
             criteria.type = typeFilter;
         }
 
         const pageNum = parseInt(page) || 1;
-        const limitNum = parseInt(limit) || 20;
-        const options = {
-            skip: (pageNum - 1) * limitNum,
-            limit: limitNum,
-            sort: { createdAt: -1 }
-        };
+        const limitNum = parseInt(limit) || 0; // 0 means no limit in MongoDB
 
-        const response = await bannerModel.find(criteria, null, options);
+        if (page && limit) {
+            options.skip = (parseInt(page) - 1) * parseInt(limit);
+            options.limit = parseInt(limit);
+        }
+
+        const response = await getData(bannerModel, criteria, {}, options);
         const totalCount = await countData(bannerModel, criteria);
 
         const stateObj = {
             page: pageNum,
             limit: limitNum,
+            page_limit: Math.ceil(totalCount / limitNum) || 1,
+        };
+
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Banners'), { banner_data: response, totalData: totalCount, state: stateObj }, {}));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+};
+
+export const getUserBanners = async (req, res) => {
+    reqInfo(req);
+    try {
+        let { type, page, limit } = req.query, options: any = { lean: true }, criteria: any = { isDeleted: false }, pageNum, limitNum;
+
+        if (type) criteria.type = type
+
+        if (page && limit) {
+            options.skip = (parseInt(page) - 1) * parseInt(limit);
+            options.limit = parseInt(limit);
+        }
+
+        const response = await getData(bannerModel, criteria, {}, options);
+        const totalCount = await countData(bannerModel, criteria);
+
+        const stateObj = {
+            page: pageNum || 1,
+            limit: limitNum || 0,
             page_limit: Math.ceil(totalCount / limitNum) || 1,
         };
 
@@ -102,41 +129,3 @@ export const sortBanners = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 }; 
-
-export const getUserBanners = async (req, res) => {
-    reqInfo(req);
-    try {
-        const { type, isActive, search, page, limit, typeFilter } = req.query;
-        const criteria: any = { isDeleted: false };
-        if (type) criteria.type = type;
-        if (isActive !== undefined) criteria.isActive = isActive === 'true';
-        if (search) {
-            criteria.title = { $regex: search, $options: 'i' };
-        }
-        if (typeFilter) {
-            criteria.type = typeFilter;
-        }
-
-        const pageNum = parseInt(page) || 1;
-        const limitNum = parseInt(limit) || 20;
-        const options = {
-            skip: (pageNum - 1) * limitNum,
-            limit: limitNum,
-            sort: { createdAt: -1 }
-        };
-
-        const response = await bannerModel.find(criteria, null, options);
-        const totalCount = await countData(bannerModel, criteria);
-
-        const stateObj = {
-            page: pageNum,
-            limit: limitNum,
-            page_limit: Math.ceil(totalCount / limitNum) || 1,
-        };
-
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Banners'), { banner_data: response, totalData: totalCount, state: stateObj }, {}));
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
-    }
-};
