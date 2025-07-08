@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { productController } from '../controllers';
-import { adminJWT } from '../helper';
+import { adminJWT, userJWT } from '../helper';
 
 const router = Router();
 // Public routes
+router.use(userJWT)
 router.get('/new-arrivals', productController.getNewArrivals);
 router.get('/best-selling', productController.getBestSelling);
 router.get('/search', productController.searchProducts);

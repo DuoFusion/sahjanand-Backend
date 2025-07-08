@@ -14,7 +14,7 @@ export const adminJWT = async (req: Request, res: Response, next) => {
     if (authorization) {
         try {
             let isVerifyToken = jwt.verify(authorization, jwt_token_secret)
-
+            console.log("isVerifyToken => ",isVerifyToken);
             result = await userModel.findOne({ _id: new ObjectId(isVerifyToken._id), isDeleted: false }).populate("roleId").lean()
             if (result?.isBlocked == true) return res.status(410).json(new apiResponse(410, responseMessage?.accountBlock, {}, {}));
             if (result?.isDeleted == false) {
@@ -30,5 +30,22 @@ export const adminJWT = async (req: Request, res: Response, next) => {
         }
     } else {
         return res.status(401).json(new apiResponse(401, responseMessage?.tokenNotFound, {}, {}))
+    }
+}
+
+export const userJWT = async (req: Request, res: Response, next) => {
+    let { authorization } = req.headers, result: any
+    try {
+        let isVerifyToken = jwt.verify(authorization, jwt_token_secret)
+        result = await userModel.findOne({ _id: new ObjectId(isVerifyToken._id), isDeleted: false }).populate("roleId").lean()
+        if (result?.isBlocked == true) return res.status(410).json(new apiResponse(410, responseMessage?.accountBlock, {}, {}));
+        if (result?.isDeleted == false) {
+            req.headers.user = result
+            return next()
+        } else {
+            return next()
+        }
+    } catch (err) {
+        return next()
     }
 }

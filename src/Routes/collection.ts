@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { collectionController } from '../controllers';
-import { adminJWT } from '../helper';
+import { adminJWT, userJWT } from '../helper';
 
 const router = Router();
 
+router.use(userJWT)
 router.get('/user', collectionController.getUserCollection);
 router.get('/products/:id', collectionController.getCollectionWithProducts);
 

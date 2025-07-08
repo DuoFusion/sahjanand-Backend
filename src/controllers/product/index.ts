@@ -15,11 +15,12 @@ const addWishlistStatus = async (products, userId) => {
     }
 
     const user = await userModel.findById(userId).select('wishlists').lean();
+    console.log("user => ",user);
     const userWishlist = user?.wishlists || [];
 
     return products.map(product => ({
         ...product,
-        isInWishlist: userWishlist.includes(product._id.toString())
+        isInWishlist: userWishlist.map(id => id.toString()).includes(product._id.toString())
     }));
 };
 
@@ -193,6 +194,7 @@ export const searchProducts = async (req, res) => {
 export const getHomepageProducts = async (req, res) => {
     reqInfo(req)
     let { user } = req.headers;
+    console.log("user => ",user);
     try {
         const userId = user?._id;
         const criteria = {
