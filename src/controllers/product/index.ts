@@ -6,7 +6,7 @@ import slugify from 'slugify';
 let ObjectId = require('mongoose').Types.ObjectId;
 
 // Helper function to add wishlist status to products
-const addWishlistStatus = async (products, userId) => {
+export const addWishlistStatus = async (products, userId) => {
     if (!userId) {
         return products.map(product => ({
             ...product,
@@ -15,7 +15,7 @@ const addWishlistStatus = async (products, userId) => {
     }
 
     const user = await userModel.findById(userId).select('wishlists').lean();
-    console.log("user => ",user);
+
     const userWishlist = user?.wishlists || [];
 
     return products.map(product => ({
@@ -126,13 +126,18 @@ export const getProducts = async (req, res) => {
 
 export const getNewArrivals = async (req, res) => {
     reqInfo(req)
+    let { user } = req.headers;
+    const userId = user?._id;
     try {
         const { limit = 20 } = req.query;
         const criteria = { isDeleted: false, isBlocked: false, isNewArrival: true };
         const options = { limit: parseInt(limit), sort: { createdAt: -1 } };
 
         const response = await getDataWithSorting(productModel, criteria, {}, options);
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('New Arrivals'), response, {}));
+
+        const productsWithWishlistStatus = await addWishlistStatus(response, userId);
+
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('New Arrivals'), productsWithWishlistStatus, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
@@ -194,7 +199,6 @@ export const searchProducts = async (req, res) => {
 export const getHomepageProducts = async (req, res) => {
     reqInfo(req)
     let { user } = req.headers;
-    console.log("user => ",user);
     try {
         const userId = user?._id;
         const criteria = {
