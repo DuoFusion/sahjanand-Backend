@@ -2,6 +2,7 @@ import { apiResponse } from '../../common';
 import { collectionModel, productModel } from '../../database';
 import { reqInfo, responseMessage } from '../../helper';
 import { getData, countData } from '../../helper/database_service';
+import { addWishlistStatus } from '../product/index';
 
 const ObjectId = require('mongoose').Types.ObjectId;
 
@@ -153,17 +154,101 @@ export const getUserCollection = async (req, res) => {
 
 export const getCollectionWithProducts = async (req, res) => {
     reqInfo(req);
+    let { user } = req.headers, { id } = req.params;
+    const userId = user?._id;
     try {
-        const { id } = req.params;
+
         const collections = await getData(collectionModel, { _id: new ObjectId(id), isDeleted: false }, {}, {});
         const collection = collections[0];
-        if (!collection) {
-            return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
-        }
+        if (!collection) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
+
         const productIds = collection.products || [];
-        const products = await getData(productModel, { _id: { $in: productIds }, isDeleted: false, isBlocked: false }, {}, {});
-        collection.products = products;
+        const products = await getData(productModel, { _id: { $in: productIds }, isDeleted: false, isBlocked: false, }, {}, {});
+        const productsWithWishlistStatus = await addWishlistStatus(products, userId);
+        collection.products = productsWithWishlistStatus;
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+};
+
+// export const getCollectionFilterWithProducts = async (req, res) => {
+//     reqInfo(req);
+//     let { user } = req.headers, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true }, { priceFilter, typeFilter } = req.query;
+//     const userId = user?._id;
+//     try {
+
+//         if (priceFilter) {
+//             criteria.price = { $gte: priceFilter.min, $lte: priceFilter.max };
+//         }
+
+//         if (typeFilter) {
+//             collectionCriteria.type = typeFilter;
+//             collectionCriteria.isDeleted = false;
+//             collectionCriteria.isBlocked = false;
+//         }
+//         let collections = [];
+//         if(Object.keys(collectionCriteria).length > 0){
+//             collections = await getData(collectionModel, { ...collectionCriteria }, {}, {});
+//         }
+
+//         const collection = collections[0];
+
+//         const productIds = collection?.products || [];
+
+//         if(productIds.length > 0) {
+//             criteria._id = { $in: productIds };
+//         }
+//         const products = await getData(productModel, { isDeleted: false, isBlocked: false, ...criteria }, {}, options);
+//         const productsWithWishlistStatus = await addWishlistStatus(products, userId);
+//         collection.products = productsWithWishlistStatus;
+//         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
+//     } catch (error) {
+//         console.log(error)
+//         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+//     }
+// };
+
+export const getCollectionFilterWithProducts = async (req, res) => {
+    reqInfo(req);
+    let { user } = req.headers, { priceFilter, typeFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    const userId = user?._id;
+    try {
+
+        if (priceFilter) {
+            criteria.price = { $gte: priceFilter.min, $lte: priceFilter.max };
+        }
+
+        if (typeFilter) {
+            collectionCriteria.type = typeFilter;
+            collectionCriteria.isDeleted = false;
+            collectionCriteria.isBlocked = false;
+        }
+        let collections = [];
+        if(Object.keys(collectionCriteria).length > 0){
+            collections = await getData(collectionModel, { ...collectionCriteria }, {}, {});
+        }
+        const collection = collections[0];
+        const productIds = collection?.products || [];
+        
+        if(productIds.length > 0) {
+            criteria._id = { $in: productIds };
+        }
+
+        let productsWithWishlistStatus = [];
+        const products = await getData(productModel, { isDeleted: false, isBlocked: false, ...criteria }, {}, options);
+        productsWithWishlistStatus = await addWishlistStatus(products, userId);
+        
+        // Always return products array, even if collection is not found
+        return res.status(200).json(
+            new apiResponse(
+                200,
+                responseMessage.getDataSuccess('Collection'),
+                { ...(collection || {}), products: productsWithWishlistStatus },
+                {}
+            )
+        );
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
