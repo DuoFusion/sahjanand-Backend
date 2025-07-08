@@ -1,6 +1,6 @@
 import { apiResponse } from '../../common';
 import { productModel, userModel } from '../../database';
-import { createData, getData, getDataWithSorting, reqInfo, responseMessage, updateData, deleteData, countData } from '../../helper';
+import { createData, getData, getDataWithSorting, reqInfo, responseMessage, updateData, deleteData, countData, getFirstMatch } from '../../helper';
 import slugify from 'slugify';
 
 let ObjectId = require('mongoose').Types.ObjectId;
@@ -72,6 +72,19 @@ export const deleteProduct = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
+
+export const getProductById = async (req, res) => {
+    reqInfo(req)
+    try {
+        const { id } = req.params;
+            
+        const response = await getFirstMatch(productModel, { _id: new ObjectId(id) }, {}, {});
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Product'), response, {}));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+}
 
 export const getProducts = async (req, res) => {
     reqInfo(req)
