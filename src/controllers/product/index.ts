@@ -1,9 +1,27 @@
 import { apiResponse } from '../../common';
-import { productModel } from '../../database';
+import { productModel, userModel } from '../../database';
 import { createData, getData, getDataWithSorting, reqInfo, responseMessage, updateData, deleteData, countData } from '../../helper';
 import slugify from 'slugify';
 
 let ObjectId = require('mongoose').Types.ObjectId;
+
+// Helper function to add wishlist status to products
+const addWishlistStatus = async (products, userId) => {
+    if (!userId) {
+        return products.map(product => ({
+            ...product,
+            isInWishlist: false
+        }));
+    }
+
+    const user = await userModel.findById(userId).select('wishlists').lean();
+    const userWishlist = user?.wishlists || [];
+
+    return products.map(product => ({
+        ...product,
+        isInWishlist: userWishlist.includes(product._id.toString())
+    }));
+};
 
 export const createProduct = async (req, res) => {
     reqInfo(req)
@@ -122,13 +140,19 @@ export const getNewArrivals = async (req, res) => {
 
 export const getBestSelling = async (req, res) => {
     reqInfo(req)
+    let { user } = req.headers;
+    const userId = user?._id;
     try {
         const { limit = 20 } = req.query;
         const criteria = { isDeleted: false, isBlocked: false, isBestSelling: true };
         const options = { limit: parseInt(limit), sort: { rating: -1 } };
 
         const response = await getDataWithSorting(productModel, criteria, {}, options);
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Best Selling Products'), response, {}));
+        
+        // Add wishlist status to each product
+        const productsWithWishlistStatus = await addWishlistStatus(response, userId);
+        
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Best Selling Products'), productsWithWishlistStatus, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
@@ -137,7 +161,9 @@ export const getBestSelling = async (req, res) => {
 
 export const searchProducts = async (req, res) => {
     reqInfo(req)
+    let { user } = req.headers;
     try {
+        const userId = user?._id;
         const { search } = req.query;
         let criteria: any = {
             isDeleted: false,
@@ -153,17 +179,22 @@ export const searchProducts = async (req, res) => {
         }
 
         const response = await getData(productModel, criteria, {}, {});
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Search Results'), response, {}));
+        
+        // Add wishlist status to each product
+        const productsWithWishlistStatus = await addWishlistStatus(response, userId);
+        
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Search Results'), productsWithWishlistStatus, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
 
-
 export const getHomepageProducts = async (req, res) => {
     reqInfo(req)
+    let { user } = req.headers;
     try {
+        const userId = user?._id;
         const criteria = {
             isDeleted: false,
             isBlocked: false,
@@ -175,7 +206,9 @@ export const getHomepageProducts = async (req, res) => {
         };
 
         const response = await getDataWithSorting(productModel, criteria, {}, options);
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Homepage Products'), response, {}));
+        // Add wishlist status to each product
+        const productsWithWishlistStatus = await addWishlistStatus(response, userId);
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Homepage Products'), productsWithWishlistStatus, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
