@@ -1,5 +1,5 @@
 import { apiResponse } from '../../common';
-import { collectionModel } from '../../database';
+import { collectionModel, productModel } from '../../database';
 import { reqInfo, responseMessage } from '../../helper';
 import { getData, countData } from '../../helper/database_service';
 
@@ -144,6 +144,25 @@ export const getUserCollection = async (req, res) => {
         }
         const collection = await getData(collectionModel, criteria, {}, options);
         if (!collection) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+};
+
+export const getCollectionWithProducts = async (req, res) => {
+    reqInfo(req);
+    try {
+        const { id } = req.params;
+        const collections = await getData(collectionModel, { _id: new ObjectId(id), isDeleted: false }, {}, {});
+        const collection = collections[0];
+        if (!collection) {
+            return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
+        }
+        const productIds = collection.products || [];
+        const products = await getData(productModel, { _id: { $in: productIds }, isDeleted: false, isBlocked: false }, {}, {});
+        collection.products = products;
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
     } catch (error) {
         console.log(error)

@@ -8,6 +8,7 @@ router.get('/new-arrivals', productController.getNewArrivals);
 router.get('/best-selling', productController.getBestSelling);
 router.get('/search', productController.searchProducts);
 router.get('/homepage', productController.getHomepageProducts);
+// router.get('/product/:id', productController.getProductById);
 
 router.use(adminJWT)
 router.post('/add', productController.createProduct);

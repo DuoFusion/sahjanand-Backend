@@ -5,6 +5,7 @@ import { adminJWT } from '../helper';
 const router = Router();
 
 router.get('/user', collectionController.getUserCollection);
+router.get('/products/:id', collectionController.getCollectionWithProducts);
 
 router.use(adminJWT)
 router.post('/add', collectionController.addCollection);

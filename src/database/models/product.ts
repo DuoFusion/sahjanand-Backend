@@ -41,7 +41,7 @@ const productSchema = new mongoose.Schema({
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user' }
 }, { timestamps: true, versionKey: false });
 
-// Add index for better search performance
+
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 
 export const productModel = mongoose.model('product', productSchema); 
