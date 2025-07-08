@@ -212,18 +212,18 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, typeFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
         if (priceFilter) {
-            criteria.price = { $gte: priceFilter.min, $lte: priceFilter.max };
+            criteria.salePrice = { $gte: priceFilter.min, $lte: priceFilter.max };
         }
 
-        if (typeFilter) {
-            collectionCriteria.type = typeFilter;
+        if (categoryFilter || colorFilter || materialFilter) {
+            collectionCriteria.type = { $in: [categoryFilter, colorFilter, materialFilter] };
             collectionCriteria.isDeleted = false;
-            collectionCriteria.isBlocked = false;
+            collectionCriteria.isBlocked = false;   
         }
         let collections = [];
         if(Object.keys(collectionCriteria).length > 0){
