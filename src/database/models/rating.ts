@@ -1,0 +1,12 @@
+var mongoose = require('mongoose');
+
+const ratingSchema = new mongoose.Schema({
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'product' },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    rating: { type: Number, required: true },
+    comment: { type: Date },
+    date: { type: Date },
+    isDeleted: { type: Boolean, default: false },
+}, { timestamps: true, versionKey: false });
+
+export const ratingModel = mongoose.model('rating', ratingSchema); 

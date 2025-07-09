@@ -220,7 +220,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (categoryFilter || colorFilter || materialFilter) {
-            collectionCriteria.type = { $in: [categoryFilter, colorFilter, materialFilter] };
+            collectionCriteria.name = { $in: [categoryFilter, colorFilter, materialFilter] };
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;   
         }
