@@ -20,6 +20,7 @@ import { testimonialRoutes } from './testimonial'
 import { enquiryRoutes } from './enquiry'
 import { newsletterRoutes } from './newsletter'
 import { askAQuestionRoutes } from './ask-a-question'
+import { ratingRoutes } from './rating'
 
 const router = express.Router()
 
@@ -36,13 +37,14 @@ router.use('/banner', bannerRoutes)
 router.use('/product-review', productReviewRoutes)
 router.use('/collection', collectionRoutes)
 router.use('/news-letter', newsletterRoutes)
+router.use('/category', categoryRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)
-router.use('/category', categoryRoutes)
 router.use('/upload', uploadRoutes)
 router.use('/blog', blogRoutes)
 router.use('/faq', faqRoutes)
 router.use('/ask-a-question', askAQuestionRoutes)
+router.use('/rating', ratingRoutes)
 
 export { router }

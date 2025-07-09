@@ -1,16 +1,17 @@
 import { Router } from 'express';
 import { categoryController } from '../controllers';
-import { adminJWT } from '../helper';
+import { adminJWT, userJWT } from '../helper';
 
 const router = Router();
 
-// Public routes
+router.use(userJWT)
+router.get('/user', categoryController.getUserCategory);
+
+router.use(adminJWT)
 router.post('/add', categoryController.createCategory);
 router.post('/edit', categoryController.updateCategory);
 router.delete('/:id', categoryController.deleteCategory);
 router.get('/featured', categoryController.getFeaturedCategories);
 router.get('/', categoryController.getCategories);
-
-// Protected routes (admin only)
 
 export const categoryRoutes = router; 

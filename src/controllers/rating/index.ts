@@ -1,4 +1,4 @@
-import { apiResponse } from '../../common';
+import { ADMIN_ROLES, apiResponse } from '../../common';
 import { ratingModel } from '../../database';
 import { createData, getData, reqInfo, responseMessage, updateData, countData } from '../../helper';
 
@@ -6,10 +6,11 @@ let ObjectId = require("mongoose").Types.ObjectId;
 
 export const createRating = async (req, res) => {
     reqInfo(req);
-    let body = req.body;
+    let body = req.body, { user } = req.headers;
     try {
+        body.userId = user?._id;
         const response = await createData(ratingModel, body)
-        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Ask A Question'), response, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Rating'), response, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
@@ -44,19 +45,14 @@ export const deleteRating = async (req, res) => {
 
 export const getRatings = async (req, res) => {
     reqInfo(req);
+    let { page, limit, productId } = req.query, options: any = { lean: true }, criteria: any = { isDeleted: false }, { user } = req.headers;
     try {
-        let { search, page, limit } = req.query, options: any = { lean: true }, criteria: any = { isDeleted: false };
-
-        if (search) {
-            criteria.$or = [
-                { name: { $regex: search, $options: 'si' } },
-                { phoneNumber: { $regex: search, $options: 'si' } },
-                { email: { $regex: search, $options: 'si' } },
-            ];
-        }
+        if(productId) criteria.productId = new ObjectId(productId);
+        
+        options.sort = { createdAt: -1 };
 
         const pageNum = parseInt(page) || 1;
-        const limitNum = parseInt(limit) || 0; // 0 means no limit in MongoDB
+        const limitNum = parseInt(limit) || 0;
 
         if (page && limit) {
             options.skip = (parseInt(page) - 1) * parseInt(limit);
@@ -78,4 +74,3 @@ export const getRatings = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
-
