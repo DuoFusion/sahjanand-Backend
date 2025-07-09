@@ -144,7 +144,6 @@ export const getUserCollection = async (req, res) => {
             criteria.type = typeFilter;
         }
         const collection = await getData(collectionModel, criteria, {}, options);
-        if (!collection) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
     } catch (error) {
         console.log(error)

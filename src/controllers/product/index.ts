@@ -24,6 +24,18 @@ export const addWishlistStatus = async (products, userId) => {
     }));
 };
 
+export const addWishlistStatusToProduct = async (product, userId) => {
+    if (!userId || !product) {
+        return { ...product, isInWishlist: false };
+    }
+    const user = await userModel.findById(userId).select('wishlists').lean();
+    const userWishlist = user?.wishlists || [];
+    return {
+        ...product,
+        isInWishlist: userWishlist.map(id => id.toString()).includes(product._id.toString())
+    };
+};
+
 export const createProduct = async (req, res) => {
     reqInfo(req)
     try {
@@ -75,11 +87,13 @@ export const deleteProduct = async (req, res) => {
 
 export const getProductById = async (req, res) => {
     reqInfo(req)
+    let { user } = req.headers;
+    const userId = user?._id;
     try {
         const { id } = req.params;
-            
         const response = await getFirstMatch(productModel, { _id: new ObjectId(id) }, {}, {});
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Product'), response, {}));
+        const productWithWishlistStatus = await addWishlistStatusToProduct(response, userId);
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Product'), productWithWishlistStatus, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));

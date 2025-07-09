@@ -19,6 +19,7 @@ import { productReviewRoutes } from './product_review'
 import { testimonialRoutes } from './testimonial'
 import { enquiryRoutes } from './enquiry'
 import { newsletterRoutes } from './newsletter'
+import { askAQuestionRoutes } from './ask-a-question'
 
 const router = express.Router()
 
@@ -42,5 +43,6 @@ router.use('/category', categoryRoutes)
 router.use('/upload', uploadRoutes)
 router.use('/blog', blogRoutes)
 router.use('/faq', faqRoutes)
+router.use('/ask-a-question', askAQuestionRoutes)
 
 export { router }

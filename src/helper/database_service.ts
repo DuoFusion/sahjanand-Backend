@@ -5,7 +5,6 @@ export const updateData = async (modelName, criteria, dataToSet, options) => {
 }
 
 export const getData = async (modelName, criteria, projection, options) => {
-    console.log("criteria => ",criteria);
     options.lean = true;
     return modelName.find(criteria, projection, options);
 }
