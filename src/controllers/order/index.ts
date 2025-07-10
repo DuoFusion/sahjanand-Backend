@@ -24,7 +24,7 @@ export const placeOrder = async (req, res) => {
         if (!addressId) {
             const defaultAddress = await addressModel.findOne({ userId: user._id, isDefault: true });
             if (!defaultAddress) return res.status(404).json(new apiResponse(404, "No address provided and no default address found.", {}, {}));
-            
+
             addressId = defaultAddress._id;
         }
 
@@ -32,6 +32,7 @@ export const placeOrder = async (req, res) => {
 
         const order = new orderModel(body);
         await order.save();
+        if (!order) return res.status(404).json(new apiResponse(404, responseMessage.addDataError, {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Order'), { order }, {}));
     } catch (error) {
         console.log(error);

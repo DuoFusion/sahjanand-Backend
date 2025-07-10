@@ -181,10 +181,10 @@ export const getBestSelling = async (req, res) => {
         const options = { limit: parseInt(limit), sort: { rating: -1 } };
 
         const response = await getDataWithSorting(productModel, criteria, {}, options);
-        
+
         // Add wishlist status to each product
         const productsWithWishlistStatus = await addWishlistStatus(response, userId);
-        
+
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Best Selling Products'), productsWithWishlistStatus, {}));
     } catch (error) {
         console.log(error);
@@ -204,18 +204,18 @@ export const searchProducts = async (req, res) => {
         };
         if (search) {
             criteria.$or = [
-                    { name: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } },
-                    { tags: { $regex: search, $options: 'i' } },
-                    { 'seo.keywords': { $regex: search, $options: 'i' } }
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } },
+                { tags: { $regex: search, $options: 'i' } },
+                { 'seo.keywords': { $regex: search, $options: 'i' } }
             ]
         }
 
         const response = await getData(productModel, criteria, {}, {});
-        
+
         // Add wishlist status to each product
         const productsWithWishlistStatus = await addWishlistStatus(response, userId);
-        
+
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Search Results'), productsWithWishlistStatus, {}));
     } catch (error) {
         console.log(error);
