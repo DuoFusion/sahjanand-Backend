@@ -1,12 +1,36 @@
 import { apiResponse } from "../../common";
-import { orderModel } from "../../database";
+import { addressModel, orderModel } from "../../database";
 import { responseMessage } from "../../helper";
 
 const ObjectId = require('mongoose').Types.ObjectId;
 
 export const placeOrder = async (req, res) => {
+    let { user } = req.headers, body = req.body
     try {
-        const order = new orderModel(req.body);
+        body.userId = user._id;
+
+        let addressId = body.addressId;
+
+        // If a new address object is provided (not just an ID)
+        if (!addressId && body.shippingAddress && typeof body.shippingAddress === 'object') {
+            const newAddress = new addressModel({
+                ...body.shippingAddress,
+                userId: user._id
+            });
+            const savedAddress = await newAddress.save();
+            addressId = savedAddress._id;
+        }
+
+        if (!addressId) {
+            const defaultAddress = await addressModel.findOne({ userId: user._id, isDefault: true });
+            if (!defaultAddress) return res.status(404).json(new apiResponse(404, "No address provided and no default address found.", {}, {}));
+            
+            addressId = defaultAddress._id;
+        }
+
+        body.shippingAddressId = new ObjectId(addressId);
+
+        const order = new orderModel(body);
         await order.save();
         return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Order'), { order }, {}));
     } catch (error) {
