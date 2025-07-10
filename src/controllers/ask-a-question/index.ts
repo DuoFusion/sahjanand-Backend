@@ -1,6 +1,7 @@
 import { apiResponse } from '../../common';
 import { askAQuestionModel } from '../../database';
-import { createData, getData, reqInfo, responseMessage, updateData, countData } from '../../helper';
+import { createData, reqInfo, responseMessage, updateData, countData } from '../../helper';
+import { findAllWithPopulate } from '../../helper/database_service';
 
 let ObjectId = require("mongoose").Types.ObjectId;
 
@@ -62,7 +63,8 @@ export const getAskAQuestions = async (req, res) => {
             options.limit = parseInt(limit);
         }
 
-        const response = await getData(askAQuestionModel, criteria, {}, options);
+        // Use the populate helper
+        const response = await findAllWithPopulate(askAQuestionModel, criteria, {}, options, { path: 'productId', select: 'name' });
         const totalCount = await countData(askAQuestionModel, criteria);
 
         const stateObj = {
