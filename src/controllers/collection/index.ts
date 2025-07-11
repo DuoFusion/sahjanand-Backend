@@ -211,7 +211,7 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
@@ -223,6 +223,30 @@ export const getCollectionFilterWithProducts = async (req, res) => {
             collectionCriteria._id = { $in: [new ObjectId(colorFilter), new ObjectId(materialFilter)] };
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;
+        }
+
+        switch (sortBy) {
+            case 'alphabetical_asc':
+                options.sort = { name: 1 };
+                break;
+            case 'alphabetical_desc':
+                options.sort = { name: -1 };
+                break;
+            case 'price_asc':
+                options.sort = { price: 1 };
+                break;
+            case 'price_desc':
+                options.sort = { price: -1 };
+                break;
+            case 'best_selling':
+                criteria.isBestSelling = true;
+                break;
+            case 'new_arrival':
+                criteria.isNewArrival = true;
+                break;
+            default:
+                options.sort = { isBestSelling: -1, createdAt: -1 };
+                break;
         }
 
         if (categoryFilter) {

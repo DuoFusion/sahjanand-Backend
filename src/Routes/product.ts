@@ -9,6 +9,7 @@ router.get('/new-arrivals', productController.getNewArrivals);
 router.get('/best-selling', productController.getBestSelling);
 router.get('/search', productController.searchProducts);
 router.get('/homepage', productController.getHomepageProducts);
+router.get('/filter', productController.getProductByFilter);
 router.get('/:id', productController.getProductById);
 
 router.use(adminJWT)

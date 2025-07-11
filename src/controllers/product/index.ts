@@ -247,3 +247,91 @@ export const getHomepageProducts = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
+
+export const getProductByFilter = async (req, res) => {
+    reqInfo(req);
+    let { page, limit, categoryId, tags, attributes, search, sortBy } = req.query;
+    let criteria: any = { isDeleted: false, isBlocked: false };
+    let options: any = { lean: true };
+
+    try {
+        if (categoryId) {
+            criteria["$or"] = [
+                { categoryId },
+                { subCategoryId: categoryId }
+            ];
+        }
+
+        if (tags) {
+            if (Array.isArray(tags)) {
+                criteria.tags = { $in: tags };
+            } else {
+                criteria.tags = { $in: tags.split(',') };
+            }
+        }
+
+        if (attributes) {
+            let attr = typeof attributes === 'string' ? JSON.parse(attributes) : attributes;
+            for (let key in attr) {
+                if (Array.isArray(attr[key])) {
+                    criteria[`attributes.${key}`] = { $in: attr[key] };
+                } else {
+                    criteria[`attributes.${key}`] = attr[key];
+                }
+            }
+        }
+
+        if (search) {
+            criteria.$text = { $search: search };
+        }
+
+        switch (sortBy) {
+            case 'alphabetical_asc':
+                options.sort = { name: 1 };
+                break;
+            case 'alphabetical_desc':
+                options.sort = { name: -1 };
+                break;
+            case 'price_asc':
+                options.sort = { price: 1 };
+                break;
+            case 'price_desc':
+                options.sort = { price: -1 };
+                break;
+            case 'best_selling':
+                criteria.isBestSelling = true;
+                break;
+            case 'new_arrival':
+                criteria.isNewArrival = true;
+                break;
+            default:
+                options.sort = { isBestSelling: -1, createdAt: -1 };
+                break;
+        }
+
+        // Pagination
+        if (page && limit) {
+            options.skip = (parseInt(page) - 1) * parseInt(limit);
+            options.limit = parseInt(limit);
+        }
+
+        const products = await productModel.find(criteria, {}, options).lean();
+
+        const totalCount = await productModel.countDocuments(criteria);
+
+        const stateObj = {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || totalCount,
+            page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
+        };
+
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Products'), {
+            product_data: products,
+            totalData: totalCount,
+            state: stateObj
+        }, {}));
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+};
