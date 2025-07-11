@@ -219,26 +219,39 @@ export const getCollectionFilterWithProducts = async (req, res) => {
             criteria.salePrice = { $gte: priceFilter.min, $lte: priceFilter.max };
         }
 
-        if (categoryFilter || colorFilter || materialFilter) {
-            collectionCriteria._id = { $in: [new ObjectId(categoryFilter), new ObjectId(colorFilter), new ObjectId(materialFilter)] };
+        if (colorFilter || materialFilter) {
+            collectionCriteria._id = { $in: [new ObjectId(colorFilter), new ObjectId(materialFilter)] };
             collectionCriteria.isDeleted = false;
-            collectionCriteria.isBlocked = false;   
+            collectionCriteria.isBlocked = false;
         }
+
+        if (categoryFilter) {
+            criteria.$or = [
+                { categoryId: new ObjectId(categoryFilter) },
+                { subCategoryId: new ObjectId(categoryFilter) }
+            ];
+            criteria.isDeleted = false;
+            criteria.isBlocked = false;
+            const products = await getData(productModel, { ...criteria }, {}, options);
+            let productsWithWishlistStatus = await addWishlistStatus(products, userId);
+            return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: productsWithWishlistStatus }, {}));
+        }
+
         let collections = [];
-        if(Object.keys(collectionCriteria).length > 0){
+        if (Object.keys(collectionCriteria).length > 0 && !categoryFilter) {
             collections = await getData(collectionModel, { ...collectionCriteria }, {}, {});
         }
         const collection = collections[0];
         const productIds = collection?.products || [];
-        
-        if(productIds.length > 0) {
+
+        if (productIds.length > 0) {
             criteria._id = { $in: productIds };
         }
 
         let productsWithWishlistStatus = [];
         const products = await getData(productModel, { isDeleted: false, isBlocked: false, ...criteria }, {}, options);
         productsWithWishlistStatus = await addWishlistStatus(products, userId);
-        
+
         // Always return products array, even if collection is not found
         return res.status(200).json(
             new apiResponse(
