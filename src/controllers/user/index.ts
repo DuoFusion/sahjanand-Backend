@@ -174,7 +174,7 @@ export const get_user_wishlist = async (req, res) => {
             .populate({
                 path: 'wishlists',
                 match: { isDeleted: false },
-                select: 'name description price images slug categoryId'
+                select: 'name description price images slug categoryId color salePrice'
             }).lean();
 
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}));
