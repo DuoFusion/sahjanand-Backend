@@ -219,7 +219,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
             criteria.salePrice = { $gte: priceFilter.min, $lte: priceFilter.max };
         }
 
-        if (colorFilter || materialFilter) {
+        if (colorFilter || materialFilter || collectionFilter) {
             collectionCriteria._id = { $in: [new ObjectId(colorFilter), new ObjectId(materialFilter), new ObjectId(collectionFilter)] };
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;
