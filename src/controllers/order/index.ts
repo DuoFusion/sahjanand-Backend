@@ -17,7 +17,7 @@ export const placeOrder = async (req, res) => {
             const existingAddress = await addressModel.findOne({ _id: new ObjectId(addressId), userId: new ObjectId(user._id), isDeleted: false });
 
             if (!existingAddress) return res.status(404).json(new apiResponse(404, "Address not found or doesn't belong to you", {}, {}));
-            
+
             shippingAddress = existingAddress;
         }
         // Case 2: If a new address object is provided, create it
@@ -25,7 +25,7 @@ export const placeOrder = async (req, res) => {
             // Validate required address fields
             const requiredFields = ['name', 'phone', 'address', 'city', 'state', 'postalCode', 'country'];
             const missingFields = requiredFields.filter(field => !body.shippingAddress[field]);
-            
+
             if (missingFields.length > 0) {
                 return res.status(400).json(new apiResponse(400, `Missing required address fields: ${missingFields.join(', ')}`, {}, {}));
             }
@@ -34,7 +34,7 @@ export const placeOrder = async (req, res) => {
                 ...body.shippingAddress,
                 userId: user._id
             });
-            
+
             const savedAddress = await newAddress.save();
             addressId = savedAddress._id;
             shippingAddress = savedAddress;
@@ -44,7 +44,7 @@ export const placeOrder = async (req, res) => {
             const defaultAddress = await addressModel.findOne({ userId: user._id, isDefault: true, isDeleted: false });
 
             if (!defaultAddress) return res.status(400).json(new apiResponse(400, "No address provided and no default address found. Please provide an address or set a default address.", {}, {}));
-            
+
             addressId = defaultAddress._id;
             shippingAddress = defaultAddress;
         }
@@ -62,10 +62,10 @@ export const placeOrder = async (req, res) => {
 
         const order = new orderModel(body);
         await order.save();
-        
-        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Order'), { 
+
+        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Order'), {
             order,
-            shippingAddress 
+            shippingAddress
         }, {}));
     } catch (error) {
         console.log(error);
@@ -108,11 +108,11 @@ export const getOrder = async (req, res) => {
     let options: any = { lean: true };
 
     try {
-        
-        if(userFilter || user?.role === ADMIN_ROLES.USER) {
-            criteria.userId = new ObjectId(userFilter || user._id);
+
+        if (user?.role === ADMIN_ROLES.USER) {
+            criteria.userId = new ObjectId(user._id);
         }
-        
+
         options.sort = { createdAt: -1 };
 
         // Add pagination if page and limit are provided
@@ -142,9 +142,9 @@ export const getOrder = async (req, res) => {
         };
 
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Orders'), {
-            order_data: response, 
-            totalData: totalCount, 
-            state: stateObj 
+            order_data: response,
+            totalData: totalCount,
+            state: stateObj
         }, {}));
     } catch (error) {
         console.log(error);
