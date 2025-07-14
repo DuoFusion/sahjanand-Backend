@@ -23,6 +23,7 @@ import { askAQuestionRoutes } from './ask-a-question'
 import { ratingRoutes } from './rating'
 import { orderRoutes } from './order'
 import { addressRoutes } from './address'
+import { cartRoutes } from './cart'
 
 const router = express.Router()
 
@@ -50,5 +51,6 @@ router.use('/ask-a-question', askAQuestionRoutes)
 router.use('/rating', ratingRoutes)
 router.use('/order', orderRoutes)
 router.use('/address', addressRoutes)
+router.use('/cart', cartRoutes)
 
 export { router }
