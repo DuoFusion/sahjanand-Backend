@@ -109,7 +109,7 @@ export const getOrder = async (req, res) => {
 
     try {
         
-        if(userFilter || user?.role === ADMIN_ROLES.USER) {
+        if(userFilter || user?.roleId?.name === ADMIN_ROLES.USER) {
             criteria.userId = new ObjectId(userFilter || user._id);
         }
         
