@@ -211,7 +211,7 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
@@ -220,7 +220,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (colorFilter || materialFilter) {
-            collectionCriteria._id = { $in: [new ObjectId(colorFilter), new ObjectId(materialFilter)] };
+            collectionCriteria._id = { $in: [new ObjectId(colorFilter), new ObjectId(materialFilter), new ObjectId(collectionFilter)] };
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;
         }
