@@ -12,7 +12,15 @@ const orderSchema = new mongoose.Schema({
     totalAmount: { type: Number },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
     orderStatus: { type: String, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
-    shippingAddressId: { type: mongoose.Schema.Types.ObjectId, ref: 'address' },
+    shippingAddress: {
+        address: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zipCode: { type: String },
+        country: { type: String },
+        phoneNumber: { type: String },
+        email: { type: String },
+    },
     trackingId: { type: String },
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true, versionKey: false });

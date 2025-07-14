@@ -1,4 +1,4 @@
-import { apiResponse } from "../../common";
+import { ADMIN_ROLES, apiResponse } from "../../common";
 import { addressModel, orderModel } from "../../database";
 import { responseMessage, getData, countData } from "../../helper";
 
@@ -49,7 +49,16 @@ export const placeOrder = async (req, res) => {
             shippingAddress = defaultAddress;
         }
 
-        body.shippingAddressId = new ObjectId(addressId);
+        // Save the complete shipping address details in the order
+        body.shippingAddress = {
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            zipCode: shippingAddress.postalCode || shippingAddress.zipCode,
+            country: shippingAddress.country,
+            phoneNumber: shippingAddress.phone,
+            email: shippingAddress.email || user.email
+        };
 
         const order = new orderModel(body);
         await order.save();
@@ -95,12 +104,14 @@ export const updateOrderStatus = async (req, res) => {
 };
 
 export const getOrder = async (req, res) => {
-    let { user } = req.headers, { page, limit } = req.query, criteria: any = { isDeleted: false };
+    let { user } = req.headers, { page, limit, userFilter } = req.query, criteria: any = { isDeleted: false };
     let options: any = { lean: true };
 
     try {
-        // Add user filter to get only user's orders
-        criteria.userId = new ObjectId(user._id);
+        
+        if(userFilter || user?.role === ADMIN_ROLES.USER) {
+            criteria.userId = new ObjectId(userFilter || user._id);
+        }
         
         options.sort = { createdAt: -1 };
 
@@ -117,8 +128,8 @@ export const getOrder = async (req, res) => {
                 select: 'name price images description categoryId'
             })
             .populate({
-                path: 'shippingAddressId',
-                select: 'name phone address city state postalCode country'
+                path: 'userId',
+                select: 'firstName lastName email'
             })
             .lean();
 
