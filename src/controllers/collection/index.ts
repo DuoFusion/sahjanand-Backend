@@ -35,7 +35,7 @@ export const deleteCollection = async (req, res) => {
     reqInfo(req);
     try {
         const { id } = req.params;
-        await collectionModel.findByIdAndDelete(id);
+        await collectionModel.findOneAndUpdate({ _id: new ObjectId(id), isDeleted: false }, { isDeleted: true }, { new: true });
         return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Collection'), {}, {}));
     } catch (error) {
         console.log(error)
@@ -47,12 +47,8 @@ export const assignProductsToCollection = async (req, res) => {
     reqInfo(req);
     try {
         const { id } = req.params;
-        const { productIds } = req.body; // array of product ObjectIds
-        const collection = await collectionModel.findByIdAndUpdate(
-            id,
-            { $addToSet: { products: { $each: productIds } } },
-            { new: true }
-        );
+        const { productIds } = req.body
+        const collection = await collectionModel.findOneAndUpdate({ _id: new ObjectId(id), isDeleted: false }, { $addToSet: { products: { $each: productIds } } }, { new: true });
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Collection'), collection, {}));
     } catch (error) {
         console.log(error)
@@ -64,11 +60,7 @@ export const removeProductFromCollection = async (req, res) => {
     reqInfo(req);
     try {
         const { id, productId } = req.params;
-        const collection = await collectionModel.findByIdAndUpdate(
-            id,
-            { $pull: { products: productId } },
-            { new: true }
-        );
+        const collection = await collectionModel.findOneAndUpdate({ _id: new ObjectId(id), isDeleted: false }, { $pull: { products: productId } }, { new: true });
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Collection'), collection, {}));
     } catch (error) {
         console.log(error)
@@ -80,7 +72,7 @@ export const getCollectionProducts = async (req, res) => {
     reqInfo(req);
     try {
         const { id } = req.params;
-        const collection = await collectionModel.findById(id).populate('products');
+        const collection = await collectionModel.findOne({ _id: new ObjectId(id), isDeleted: false }).populate('products');
         if (!collection) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Collection'), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection.products, {}));
     } catch (error) {
