@@ -1,7 +1,15 @@
 import { apiResponse } from '../../common';
 import { productModel, userModel } from '../../database';
-import { createData, getData, getDataWithSorting, reqInfo, responseMessage, updateData, deleteData, countData, getFirstMatch } from '../../helper';
+import { createData, getData, getDataWithSorting, reqInfo, responseMessage, updateData, deleteData, countData, getFirstMatch, findAllWithPopulate, findOneAndPopulate, findAllWithPopulateWithSorting } from '../../helper';
 import slugify from 'slugify';
+
+export const productAttributePopulate = [
+    { path: 'attributes.colorIds', model: 'color', select: 'name colorCode' },
+    { path: 'attributes.sizeIds', model: 'size', select: 'name' },
+    { path: 'attributes.materialIds', model: 'material', select: 'name' },
+    { path: 'attributes.fabricIds', model: 'fabric', select: 'name' },
+    { path: 'attributes.occasionIds', model: 'occasion', select: 'name' }
+];
 
 let ObjectId = require('mongoose').Types.ObjectId;
 
@@ -91,7 +99,7 @@ export const getProductById = async (req, res) => {
     const userId = user?._id;
     try {
         const { id } = req.params;
-        const response = await getFirstMatch(productModel, { _id: new ObjectId(id) }, {}, {});
+        const response = await findOneAndPopulate(productModel, { _id: new ObjectId(id) }, {}, {}, productAttributePopulate);
         const productWithWishlistStatus = await addWishlistStatusToProduct(response, userId);
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Product'), productWithWishlistStatus, {}));
     } catch (error) {
@@ -135,7 +143,7 @@ export const getProducts = async (req, res) => {
             sort: sort ? JSON.parse(sort) : { createdAt: -1 }
         };
 
-        const response = await getDataWithSorting(productModel, criteria, {}, options);
+        const response = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
         const totalCount = await countData(productModel, criteria);
 
         const stateObj = {
@@ -160,7 +168,7 @@ export const getNewArrivals = async (req, res) => {
         const criteria = { isDeleted: false, isBlocked: false, isNewArrival: true };
         const options = { limit: parseInt(limit), sort: { createdAt: -1 } };
 
-        const response = await getDataWithSorting(productModel, criteria, {}, options);
+        const response = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
 
         const productsWithWishlistStatus = await addWishlistStatus(response, userId);
 
@@ -180,7 +188,7 @@ export const getBestSelling = async (req, res) => {
         const criteria = { isDeleted: false, isBlocked: false, isBestSelling: true };
         const options = { limit: parseInt(limit), sort: { rating: -1 } };
 
-        const response = await getDataWithSorting(productModel, criteria, {}, options);
+        const response = await findAllWithPopulateWithSorting(productModel, criteria, {}, options, productAttributePopulate);
 
         // Add wishlist status to each product
         const productsWithWishlistStatus = await addWishlistStatus(response, userId);
@@ -211,7 +219,7 @@ export const searchProducts = async (req, res) => {
             ]
         }
 
-        const response = await getData(productModel, criteria, {}, {});
+        const response = await findAllWithPopulate(productModel, criteria, {}, {}, productAttributePopulate);
 
         // Add wishlist status to each product
         const productsWithWishlistStatus = await addWishlistStatus(response, userId);
@@ -238,7 +246,7 @@ export const getHomepageProducts = async (req, res) => {
             limit: 20
         };
 
-        const response = await getDataWithSorting(productModel, criteria, {}, options);
+        const response = await findAllWithPopulateWithSorting(productModel, criteria, {}, options, productAttributePopulate);
         // Add wishlist status to each product
         const productsWithWishlistStatus = await addWishlistStatus(response, userId);
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Homepage Products'), productsWithWishlistStatus, {}));
@@ -315,9 +323,9 @@ export const getProductByFilter = async (req, res) => {
             options.limit = parseInt(limit);
         }
 
-        const products = await productModel.find(criteria, {}, options).lean();
+        const products = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
 
-        const totalCount = await productModel.countDocuments(criteria);
+        const totalCount = await countData(productModel, criteria);
 
         const stateObj = {
             page: parseInt(page) || 1,
