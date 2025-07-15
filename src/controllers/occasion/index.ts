@@ -49,8 +49,8 @@ export const deleteOccasion = async (req, res) => {
     const { id } = req.params;
     try {
         const response = await deleteData(occasionModel, { _id: new ObjectId(id), isDeleted: false });
-        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Color'), {}, {}));
-        return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Color'), response, {}));
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Occasion'), {}, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Occasion'), response, {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
