@@ -256,41 +256,21 @@ export const getHomepageProducts = async (req, res) => {
     }
 };
 
-export const getProductByFilter = async (req, res) => {
+export const getProductWithFilter = async (req, res) => {
     reqInfo(req);
-    let { page, limit, categoryId, tags, attributes, search, sortBy } = req.query;
-    let criteria: any = { isDeleted: false, isBlocked: false };
-    let options: any = { lean: true };
-
+    let { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, uniqueCategoryFilter } = req.query, criteria: any = {}, options: any = { lean: true }, { user } = req.headers;
     try {
-        if (categoryId) {
-            criteria["$or"] = [
-                { categoryId },
-                { subCategoryId: categoryId }
-            ];
+
+        if (priceFilter) {
+            criteria.salePrice = { $gte: priceFilter.min, $lte: priceFilter.max };
         }
 
-        if (tags) {
-            if (Array.isArray(tags)) {
-                criteria.tags = { $in: tags };
-            } else {
-                criteria.tags = { $in: tags.split(',') };
-            }
+        if (colorFilter) {
+            criteria['attributes.colorIds'] = { $in: [new ObjectId(colorFilter)] };
         }
 
-        if (attributes) {
-            let attr = typeof attributes === 'string' ? JSON.parse(attributes) : attributes;
-            for (let key in attr) {
-                if (Array.isArray(attr[key])) {
-                    criteria[`attributes.${key}`] = { $in: attr[key] };
-                } else {
-                    criteria[`attributes.${key}`] = attr[key];
-                }
-            }
-        }
-
-        if (search) {
-            criteria.$text = { $search: search };
+        if (materialFilter) {
+            criteria['attributes.materialIds'] = { $in: [new ObjectId(materialFilter)] };
         }
 
         switch (sortBy) {
@@ -301,10 +281,10 @@ export const getProductByFilter = async (req, res) => {
                 options.sort = { name: -1 };
                 break;
             case 'price_asc':
-                options.sort = { price: 1 };
+                options.sort = { salePrice: 1 };
                 break;
             case 'price_desc':
-                options.sort = { price: -1 };
+                options.sort = { salePrice: -1 };
                 break;
             case 'best_selling':
                 criteria.isBestSelling = true;
@@ -317,29 +297,20 @@ export const getProductByFilter = async (req, res) => {
                 break;
         }
 
-        // Pagination
-        if (page && limit) {
-            options.skip = (parseInt(page) - 1) * parseInt(limit);
-            options.limit = parseInt(limit);
+        if (categoryFilter) {
+            criteria.categoryId = new ObjectId(categoryFilter);
+        }
+
+        if (uniqueCategoryFilter) {
+            criteria.uniqueCategoryId = new ObjectId(uniqueCategoryFilter);
         }
 
         const products = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
+        const productsWithWishlistStatus = await addWishlistStatus(products, user?._id);
 
-        const totalCount = await countData(productModel, criteria);
-
-        const stateObj = {
-            page: parseInt(page) || 1,
-            limit: parseInt(limit) || totalCount,
-            page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
-        };
-
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Products'), {
-            product_data: products,
-            totalData: totalCount,
-            state: stateObj
-        }, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Products'), { products: productsWithWishlistStatus }, {}));
     } catch (error) {
-        console.log(error);
+        console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };

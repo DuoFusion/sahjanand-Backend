@@ -1,8 +1,8 @@
 import { apiResponse } from '../../common';
 import { collectionModel, productModel } from '../../database';
 import { reqInfo, responseMessage } from '../../helper';
-import { getData, countData } from '../../helper/database_service';
-import { addWishlistStatus } from '../product/index';
+import { getData, countData, findAllWithPopulate } from '../../helper/database_service';
+import { addWishlistStatus, productAttributePopulate } from '../product/index';
 
 const ObjectId = require('mongoose').Types.ObjectId;
 
@@ -203,7 +203,7 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
@@ -250,41 +250,22 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (categoryFilter) {
-            criteria.$or = [
-                { categoryId: new ObjectId(categoryFilter) },
-                { subCategoryId: new ObjectId(categoryFilter) }
-            ];
-            criteria.isDeleted = false;
-            criteria.isBlocked = false;
-            const products = await getData(productModel, { ...criteria }, {}, options);
-            let productsWithWishlistStatus = await addWishlistStatus(products, userId);
-            return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: productsWithWishlistStatus }, {}));
+            criteria.categoryId = new ObjectId(categoryFilter);
         }
 
-        let collections = [];
-        if (Object.keys(collectionCriteria).length > 0 && !categoryFilter) {
-            collections = await getData(collectionModel, { ...collectionCriteria }, {}, {});
-        }
-        const collection = collections[0];
-        const productIds = collection?.products || [];
-
-        if (productIds.length > 0) {
-            criteria._id = { $in: productIds };
+        if (uniqueCategoryFilter) {
+            criteria.uniqueCategoryId = new ObjectId(uniqueCategoryFilter);
         }
 
-        let productsWithWishlistStatus = [];
-        const products = await getData(productModel, { isDeleted: false, isBlocked: false, ...criteria }, {}, options);
-        productsWithWishlistStatus = await addWishlistStatus(products, userId);
+        if (Object.keys(collectionCriteria).length > 0 && !categoryFilter && !uniqueCategoryFilter) {
+            let collections = await getData(collectionModel, collectionCriteria, {}, {});
+            return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: collections[0]?.products }, {}));
+        }
 
-        // Always return products array, even if collection is not found
-        return res.status(200).json(
-            new apiResponse(
-                200,
-                responseMessage.getDataSuccess('Collection'),
-                { ...(collection || {}), products: productsWithWishlistStatus },
-                {}
-            )
-        );
+        const products = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
+        const productsWithWishlistStatus = await addWishlistStatus(products, userId);
+
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: productsWithWishlistStatus }, {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
