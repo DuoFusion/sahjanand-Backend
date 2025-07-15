@@ -111,12 +111,12 @@ export const getProductById = async (req, res) => {
 export const getProducts = async (req, res) => {
     reqInfo(req)
     try {
-        const { category, subCategory, tag, color, size, material, fabric, occasion, sort, limit, page, showOnHomepage, search } = req.query;
+        const { categoryFilter, uniqueCategoryFilter, tag, color, size, material, fabric, occasion, sort, limit, page, showOnHomepage, search } = req.query;
 
         const criteria: any = { isDeleted: false, isBlocked: false };
 
-        if (category) criteria.categoryId = category;
-        if (subCategory) criteria.subCategoryId = subCategory;
+        if (categoryFilter) criteria.categoryId = categoryFilter;
+        if (uniqueCategoryFilter) criteria.uniqueCategoryId = uniqueCategoryFilter;
         if (tag) criteria.tags = tag;
         if (color) criteria['attributes.color'] = color;
         if (size) criteria['attributes.size'] = size;

@@ -2,14 +2,14 @@ var mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String },
     description: { type: String },
     price: { type: Number, required: true },
     salePrice: { type: Number },
-    sku: { type: String, required: true, unique: true },
+    sku: { type: String },
     images: [{ type: String }],
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
-    subCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
+    uniqueCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'unique-category' },
     tags: [{ type: String }],
     attributes: {
         colorIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'color' }],
