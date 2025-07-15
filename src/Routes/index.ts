@@ -28,6 +28,7 @@ import { colorRoutes } from './color'
 import { materialRoutes } from './material'
 import { occasionRoutes } from './occasion'
 import { fabricRoutes } from './fabric'
+import { sizeRoutes } from './size'
 
 const router = express.Router()
 
@@ -49,6 +50,7 @@ router.use('/color', colorRoutes)
 router.use('/material', materialRoutes)
 router.use('/occasion', occasionRoutes)
 router.use('/fabric', fabricRoutes)
+router.use('/size', sizeRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)

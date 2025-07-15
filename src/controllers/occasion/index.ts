@@ -29,13 +29,13 @@ export const updateOccasion = async (req, res) => {
     let body = req.body;
     try {
 
-        let isExist = await occasionModel.findOne({ name: body.name, isDeleted: false, _id: { $ne: new ObjectId(body.colorId) } })
+        let isExist = await occasionModel.findOne({ name: body.name, isDeleted: false, _id: { $ne: new ObjectId(body.occasionId) } })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Name"), {}, {}));
         
-        isExist = await occasionModel.findOne({ priority: body.priority, isDeleted: false, _id: { $ne: new ObjectId(body.colorId) } })
+        isExist = await occasionModel.findOne({ priority: body.priority, isDeleted: false, _id: { $ne: new ObjectId(body.occasionId) } })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Priority"), {}, {}));
 
-        const response = await updateData(occasionModel, { _id: new ObjectId(body.colorId), isDeleted: false }, body, {});
+        const response = await updateData(occasionModel, { _id: new ObjectId(body.occasionId), isDeleted: false }, body, {});
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage.updateDataError('Occasion'), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Occasion'), response, {}));
     } catch (error) {
