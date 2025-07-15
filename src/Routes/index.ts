@@ -30,6 +30,7 @@ import { occasionRoutes } from './occasion'
 import { fabricRoutes } from './fabric'
 import { sizeRoutes } from './size'
 import { ourStoryRoutes } from './our-story'
+import { uniqueCategoryRoutes } from './unique-category'
 
 const router = express.Router()
 
@@ -53,6 +54,7 @@ router.use('/occasion', occasionRoutes)
 router.use('/fabric', fabricRoutes)
 router.use('/size', sizeRoutes)
 router.use('/our-story', ourStoryRoutes)
+router.use('/unique-category', uniqueCategoryRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)
