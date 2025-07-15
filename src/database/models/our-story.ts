@@ -8,4 +8,4 @@ const ourStorySchema = new mongoose.Schema({
     isBlocked: { type: Boolean, default: false }
 }, { timestamps: true, versionKey: false });
 
-export const ourStoryModel = mongoose.model('ourStory', ourStorySchema);
+export const ourStoryModel = mongoose.model('our-story', ourStorySchema);
