@@ -26,6 +26,7 @@ import { addressRoutes } from './address'
 import { cartRoutes } from './cart'
 import { colorRoutes } from './color'
 import { materialRoutes } from './material'
+import { occasionRoutes } from './occasion'
 
 const router = express.Router()
 
@@ -45,6 +46,7 @@ router.use('/news-letter', newsletterRoutes)
 router.use('/category', categoryRoutes)
 router.use('/color', colorRoutes)
 router.use('/material', materialRoutes)
+router.use('/occasion', occasionRoutes)
 
 router.use(adminJWT)
 router.use('/role', roleRoutes)

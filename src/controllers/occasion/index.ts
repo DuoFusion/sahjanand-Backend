@@ -1,63 +1,63 @@
 import { createData, getData, updateData, deleteData, reqInfo, responseMessage, countData } from "../../helper";
 import { apiResponse } from "../../common";
-import { materialModel } from "../../database";
+import { occasionModel } from "../../database";
 
 const ObjectId = require("mongoose").Types.ObjectId;
 
-export const createMaterial = async (req, res) => {
+export const createOccasion = async (req, res) => {
     reqInfo(req)
     const body = req.body;
     try {
 
-        let isExist = await materialModel.findOne({ name: body.name, isDeleted: false })
+        let isExist = await occasionModel.findOne({ name: body.name, isDeleted: false })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Name"), {}, {}));
         
-        isExist = await materialModel.findOne({ priority: body.priority, isDeleted: false })
+        isExist = await occasionModel.findOne({ priority: body.priority, isDeleted: false })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Priority"), {}, {}));
 
-        const response = await createData(materialModel, body);
+        const response = await createData(occasionModel, body);
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage.addDataError, {}, {}));
-        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('material'), response, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Occasion'), response, {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
 
-export const updateMaterial = async (req, res) => {
+export const updateOccasion = async (req, res) => {
     reqInfo(req)
     let body = req.body;
     try {
 
-        let isExist = await materialModel.findOne({ name: body.name, isDeleted: false, _id: { $ne: new ObjectId(body.materialId) } })
+        let isExist = await occasionModel.findOne({ name: body.name, isDeleted: false, _id: { $ne: new ObjectId(body.colorId) } })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Name"), {}, {}));
         
-        isExist = await materialModel.findOne({ priority: body.priority, isDeleted: false, _id: { $ne: new ObjectId(body.materialId) } })
+        isExist = await occasionModel.findOne({ priority: body.priority, isDeleted: false, _id: { $ne: new ObjectId(body.colorId) } })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Priority"), {}, {}));
 
-        const response = await updateData(materialModel, { _id: new ObjectId(body.materialId), isDeleted: false }, body, {});
-        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.updateDataError('material'), {}, {}));
-        return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('material'), response, {}));
+        const response = await updateData(occasionModel, { _id: new ObjectId(body.colorId), isDeleted: false }, body, {});
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.updateDataError('Occasion'), {}, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Occasion'), response, {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
 
-export const deleteMaterial = async (req, res) => {
+export const deleteOccasion = async (req, res) => {
     reqInfo(req)
     const { id } = req.params;
     try {
-        const response = await deleteData(materialModel, { _id: new ObjectId(id), isDeleted: false });
-        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('material'), {}, {}));
-        return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('material'), response, {}));
+        const response = await deleteData(occasionModel, { _id: new ObjectId(id), isDeleted: false });
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Color'), {}, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Color'), response, {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
 
-export const getAllMaterials = async (req, res) => {
+export const getAllOccasions = async (req, res) => {
     reqInfo(req);
     let { page, limit, search } = req.query, criteria: any = {}, options: any = { lean: true };
     try {
@@ -76,8 +76,8 @@ export const getAllMaterials = async (req, res) => {
             options.limit = parseInt(limit);
         }
 
-        const response = await getData(materialModel, criteria, {}, options);
-        const totalCount = await countData(materialModel, criteria);
+        const response = await getData(occasionModel, criteria, {}, options);
+        const totalCount = await countData(occasionModel, criteria);
 
         const stateObj = {
             page: parseInt(page) || 1,
@@ -85,8 +85,8 @@ export const getAllMaterials = async (req, res) => {
             page_limit: Math.ceil(totalCount / (parseInt(limit) || totalCount)) || 1,
         };
 
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('material'), {
-            material_data: response,
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Occasion'), {
+            occasion_data: response,
             totalData: totalCount,
             state: stateObj
         }, {}));
@@ -96,13 +96,13 @@ export const getAllMaterials = async (req, res) => {
     }
 };
 
-export const getMaterialById = async (req, res) => {
+export const getOccasionById = async (req, res) => {
     reqInfo(req)
     const { id } = req.params;
     try {
-        const response = await getData(materialModel, { _id: new ObjectId(id), isDeleted: false }, {}, {});
-        if (!response || response.length === 0) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('material'), {}, {}));
-        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('material'), response[0], {}));
+        const response = await getData(occasionModel, { _id: ObjectId(id), isDeleted: false }, {}, {});
+        if (!response || response.length === 0) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Occasion'), {}, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Occasion'), response[0], {}));
     } catch (error) {
         console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));

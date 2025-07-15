@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { categoryController, colorController } from '../controllers';
+import { colorController } from '../controllers';
 import { adminJWT, userJWT } from '../helper';
 
 const router = Router();
