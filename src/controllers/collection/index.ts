@@ -211,10 +211,18 @@ export const getCollectionFilterWithProducts = async (req, res) => {
             criteria.salePrice = { $gte: priceFilter.min, $lte: priceFilter.max };
         }
 
-        if (colorFilter || materialFilter || collectionFilter) {
-            collectionCriteria._id = { $in: [new ObjectId(colorFilter), new ObjectId(materialFilter), new ObjectId(collectionFilter)] };
+        if (collectionFilter) {
+            collectionCriteria._id = { $in: [new ObjectId(collectionFilter)] };
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;
+        }
+
+        if (colorFilter) {
+            criteria['attributes.colorIds'] = { $in: [new ObjectId(colorFilter)] };
+        }
+
+        if (materialFilter) {
+            criteria['attributes.materialIds'] = { $in: [new ObjectId(materialFilter)] };
         }
 
         switch (sortBy) {
