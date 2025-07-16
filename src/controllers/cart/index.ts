@@ -41,13 +41,16 @@ export const addToCart = async (req, res) => {
 
 export const updateCartItem = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { productId, quantity } = req.body;
+    let { user } = req.headers, { productId, quantity, color, size, price } = req.body;
     try {
         let cart = await cartModel.findOne({ userId: new ObjectId(user?._id), isDeleted: false });
         if (!cart) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Cart'), {}, {}));
         const index = cart.products.findIndex(p => p.productId.toString() === productId);
         if (index === -1) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Product in Cart'), {}, {}));
         cart.products[index].quantity = quantity;
+        if (color !== undefined) cart.products[index].color = color;
+        if (size !== undefined) cart.products[index].size = size;
+        if (price !== undefined) cart.products[index].price = price;
         await cart.save();
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Cart'), cart, {}));
     } catch (error) {
@@ -58,24 +61,18 @@ export const updateCartItem = async (req, res) => {
 
 export const removeCartItem = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { productId, quantity, color, size, price } = req.body;
+    let { user } = req.headers, { productId } = req.body;
     try {
         let cart = await cartModel.findOne({ userId: new ObjectId(user?._id), isDeleted: false });
         if (!cart) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Cart'), {}, {}));
         const index = cart.products.findIndex(p => p.productId.toString() === productId);
         if (index > -1) {
-            cart.products[index].quantity -= 1;
-            if (color !== undefined) cart.products[index].color = color;
-            if (size !== undefined) cart.products[index].size = size;
-            if (price !== undefined) cart.products[index].price = price;
-            if (cart.products[index].quantity === 0) {
-                cart.products.splice(index, 1);
-            }
+            cart.products.splice(index, 1); // Remove the item completely
+            await cart.save();
+            return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Cart Item'), cart, {}));
         } else {
-            cart.products.push({ productId, quantity, color, size, price });
+            return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Product in Cart'), {}, {}));
         }
-        await cart.save();
-        return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Cart Item'), cart, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
