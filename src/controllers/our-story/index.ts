@@ -18,7 +18,6 @@ export const get_all_stories = async (req, res) => {
     reqInfo(req)
     try {
         const response = await ourStoryModel.findOne({ isDeleted: false })
-        if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("our story"), {}, {}))
         return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("our story"), response, {}))
     } catch (error) {
         console.log(error);
