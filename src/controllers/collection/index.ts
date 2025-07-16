@@ -203,7 +203,7 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
@@ -223,6 +223,10 @@ export const getCollectionFilterWithProducts = async (req, res) => {
 
         if (materialFilter) {
             criteria['attributes.materialIds'] = { $in: [new ObjectId(materialFilter)] };
+        }
+        
+        if (occasionFilter) {
+            criteria['attributes.occasionIds'] = { $in: [new ObjectId(occasionFilter)] };
         }
 
         switch (sortBy) {
@@ -256,7 +260,8 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         if (uniqueCategoryFilter) {
             criteria.uniqueCategoryId = new ObjectId(uniqueCategoryFilter);
         }
-
+        criteria.isDeleted = false
+        criteria.isBlocked = false
         if (Object.keys(collectionCriteria).length > 0 && !categoryFilter && !uniqueCategoryFilter) {
             let collections = await getData(collectionModel, collectionCriteria, {}, {});
             return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: collections[0]?.products }, {}));
