@@ -1,10 +1,12 @@
-import { ADMIN_ROLES, apiResponse } from "../../common";
+import { ADMIN_ROLES, apiResponse, razorpay } from "../../common";
 import { addressModel, orderModel } from "../../database";
-import { responseMessage, getData, countData } from "../../helper";
+import { responseMessage, countData, reqInfo } from "../../helper";
+import crypto from 'crypto';
 
 const ObjectId = require('mongoose').Types.ObjectId;
 
 export const placeOrder = async (req, res) => {
+    reqInfo(req);
     let { user } = req.headers, body = req.body
     try {
         body.userId = user._id;
@@ -63,9 +65,17 @@ export const placeOrder = async (req, res) => {
         const order = new orderModel(body);
         await order.save();
 
+        const razorpayOrder = await createRazorpayOrder({
+            amount: order.totalAmount,
+            currency: 'INR',
+            receipt: order._id.toString()
+        });
+        if (!razorpayOrder) return res.status(500).json(new apiResponse(500, "Razorpay order creation failed", {}, {}));
+
         return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Order'), {
             order,
-            shippingAddress
+            shippingAddress,
+            razorpayOrder
         }, {}));
     } catch (error) {
         console.log(error);
@@ -73,7 +83,24 @@ export const placeOrder = async (req, res) => {
     }
 };
 
+export const createRazorpayOrder = async (payload) => {
+    const { amount, currency = 'INR', receipt } = payload;
+    try {
+        const options = {
+            amount: amount,
+            currency,
+            receipt,
+        };
+        const order = await razorpay.orders.create(options);
+        return order;
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
+};
+
 export const trackOrder = async (req, res) => {
+    reqInfo(req)
     try {
         const { trackingId } = req.params;
         const order = await orderModel.findOne({ trackingId });
@@ -88,6 +115,7 @@ export const trackOrder = async (req, res) => {
 };
 
 export const updateOrderStatus = async (req, res) => {
+    reqInfo(req)
     try {
         const { orderId } = req.params;
         const { orderStatus, trackingId } = req.body;
@@ -104,6 +132,7 @@ export const updateOrderStatus = async (req, res) => {
 };
 
 export const getOrder = async (req, res) => {
+    reqInfo(req)
     let { user } = req.headers, { page, limit, userFilter } = req.query, criteria: any = { isDeleted: false };
     let options: any = { lean: true };
 
@@ -151,3 +180,21 @@ export const getOrder = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
+
+export const verifyRazorpayPayment = async (req, res) => {
+    let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    try {
+        const sign = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(sign)
+            .digest("hex");
+
+        if (razorpay_signature === expectedSignature) return res.json(200).json(new apiResponse(200, responseMessage?.getDataSuccess("signature"), {}, {}));
+        return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
+    }
+}
