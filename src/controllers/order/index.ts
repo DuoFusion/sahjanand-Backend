@@ -62,7 +62,7 @@ export const placeOrder = async (req, res) => {
             email: shippingAddress.email || user.email
         };
 
-        body.amount = body.totalAmount / 100;
+        body.totalAmount = body.totalAmount / 100;
 
         let order = new orderModel(body);
         await order.save();

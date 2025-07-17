@@ -226,7 +226,7 @@ export const get_admin_data = async (req, res) => {
     reqInfo(req)
     try {
         let role = await roleModel.findOne({ name: ADMIN_ROLES.ADMIN, isDeleted: false })
-        let response = await userModel.findOne({ roleId: new ObjectId(role?._id), isDeleted: false }).select('email phoneNumber address city state zipCode country gender socialMedia headerOffer').lean()
+        let response = await userModel.findOne({ roleId: new ObjectId(role?._id), isDeleted: false }).select('email phoneNumber address city state zipCode country gender socialMedia headerOffer newsLetterImage lat long').lean()
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}))
         return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("User"), response, {}))
     } catch (error) {
