@@ -171,11 +171,16 @@ export const get_user_wishlist = async (req, res) => {
     try {
         let role = await roleModel.findOne({ name: ADMIN_ROLES.USER, isDeleted: false })
         const response = await userModel.findOne({ _id: new ObjectId(user?._id), roleId: new ObjectId(role?._id), isDeleted: false })
-            .populate({
-                path: 'wishlists',
-                match: { isDeleted: false },
-                select: 'name description price images slug categoryId color salePrice'
-            }).lean();
+        .populate({
+            path: 'wishlists',
+            match: { isDeleted: false, isBlocked: false },
+            select: 'name description price images slug categoryId salePrice attributes.colorIds',
+            populate: {
+                path: 'attributes.colorIds',
+                model: 'color',
+                select: 'name code'
+            }
+        }).lean();
 
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}));
 
