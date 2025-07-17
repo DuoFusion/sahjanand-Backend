@@ -178,7 +178,7 @@ export const get_user_wishlist = async (req, res) => {
             populate: {
                 path: 'attributes.colorIds',
                 model: 'color',
-                select: 'name code'
+                select: 'name colorCode'
             }
         }).lean();
 
