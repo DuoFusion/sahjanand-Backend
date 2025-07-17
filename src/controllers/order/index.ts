@@ -182,6 +182,7 @@ export const getOrder = async (req, res) => {
 };
 
 export const verifyRazorpayPayment = async (req, res) => {
+    reqInfo(req)
     let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     try {
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
@@ -189,8 +190,7 @@ export const verifyRazorpayPayment = async (req, res) => {
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
             .update(sign)
             .digest("hex");
-
-        if (razorpay_signature === expectedSignature) return res.json(200).json(new apiResponse(200, responseMessage?.getDataSuccess("signature"), {}, {}));
+        if (razorpay_signature === expectedSignature) return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("signature"), {}, {}));
         return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
 
     } catch (error) {
