@@ -62,7 +62,9 @@ export const placeOrder = async (req, res) => {
             email: shippingAddress.email || user.email
         };
 
-        const order = new orderModel(body);
+        body.amount = body.totalAmount / 100;
+
+        let order = new orderModel(body);
         await order.save();
 
         const razorpayOrder = await createRazorpayOrder({
@@ -71,7 +73,7 @@ export const placeOrder = async (req, res) => {
             receipt: order._id.toString()
         });
         if (!razorpayOrder) return res.status(500).json(new apiResponse(500, "Razorpay order creation failed", {}, {}));
-
+        order = await orderModel.findOneAndUpdate({ _id: new ObjectId(order._id) }, { razorpayOrderId: razorpayOrder.id }, { new: true });
         return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Order'), {
             order,
             shippingAddress,
@@ -182,6 +184,7 @@ export const getOrder = async (req, res) => {
 };
 
 export const verifyRazorpayPayment = async (req, res) => {
+    reqInfo(req)
     let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body, { user } = req.headers;
     try {
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
@@ -192,7 +195,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
         if (razorpay_signature !== expectedSignature) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
 
-        const order = await orderModel.findOneAndUpdate({ _id: new ObjectId(razorpay_order_id) }, { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, orderStatus: 'paid' }, { new: true });
+        const order = await orderModel.findOneAndUpdate({ razorpayOrderId: razorpay_order_id }, { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, orderStatus: 'paid' }, { new: true });
 
         await cartModel.deleteMany({ userId: new ObjectId(user._id) });
 
