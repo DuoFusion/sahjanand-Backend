@@ -253,7 +253,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
                 criteria.isNewArrival = true;
                 break;
             default:
-                options.sort = { isBestSelling: -1, createdAt: -1 };
+                options.sort = { createdAt: -1 };
                 break;
         }
 
