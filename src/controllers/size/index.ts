@@ -69,7 +69,7 @@ export const getAllSizes = async (req, res) => {
             ];
         }
 
-        options.sort = { priority: 1, };
+        options.sort = { priority: 1 };
 
         if (page && limit) {
             options.skip = (parseInt(page) - 1) * parseInt(limit);

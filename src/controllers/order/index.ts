@@ -1,6 +1,6 @@
 import { ADMIN_ROLES, apiResponse, razorpay } from "../../common";
 import { addressModel, orderModel } from "../../database";
-import { responseMessage, countData, reqInfo } from "../../helper";
+import { responseMessage, countData, reqInfo, findAllWithPopulateWithSorting } from "../../helper";
 import crypto from 'crypto';
 
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -137,7 +137,6 @@ export const getOrder = async (req, res) => {
     let options: any = { lean: true };
 
     try {
-
         if (user?.roleId?.name === ADMIN_ROLES.USER) {
             criteria.userId = new ObjectId(user._id);
         }
@@ -150,17 +149,18 @@ export const getOrder = async (req, res) => {
             options.limit = parseInt(limit);
         }
 
-        // Get orders with product population
-        const response = await orderModel.find(criteria, {}, options)
-            .populate({
+        const populateModel = [
+            {
                 path: 'products.productId',
                 select: 'name price images description categoryId'
-            })
-            .populate({
+            },
+            {
                 path: 'userId',
                 select: 'firstName lastName email'
-            })
-            .lean();
+            }
+        ];
+
+        const response = await findAllWithPopulateWithSorting(orderModel, criteria, {}, options, populateModel);
 
         const totalCount = await countData(orderModel, criteria);
 
@@ -182,7 +182,6 @@ export const getOrder = async (req, res) => {
 };
 
 export const verifyRazorpayPayment = async (req, res) => {
-    reqInfo(req)
     let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     try {
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
@@ -190,7 +189,8 @@ export const verifyRazorpayPayment = async (req, res) => {
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
             .update(sign)
             .digest("hex");
-        if (razorpay_signature === expectedSignature) return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("signature"), {}, {}));
+
+        if (razorpay_signature === expectedSignature) return res.json(200).json(new apiResponse(200, responseMessage?.getDataSuccess("signature"), {}, {}));
         return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
 
     } catch (error) {
