@@ -258,7 +258,7 @@ export const getHomepageProducts = async (req, res) => {
 
 export const getProductWithFilter = async (req, res) => {
     reqInfo(req);
-    let { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, uniqueCategoryFilter } = req.query, criteria: any = {}, options: any = { lean: true }, { user } = req.headers;
+    let { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, uniqueCategoryFilter, bestSellingFilter, newArrivalFilter, featuredFilter } = req.query, criteria: any = {}, options: any = { lean: true }, { user } = req.headers;
     try {
 
         if (priceFilter) {
@@ -271,6 +271,18 @@ export const getProductWithFilter = async (req, res) => {
 
         if (materialFilter) {
             criteria['attributes.materialIds'] = { $in: [new ObjectId(materialFilter)] };
+        }
+
+        if (bestSellingFilter) {
+            criteria.isBestSelling = bestSellingFilter;
+        }
+
+        if(newArrivalFilter) {
+            criteria.isNewArrival = newArrivalFilter;
+        }
+
+        if(featuredFilter) {
+            criteria.isFeatured = featuredFilter;
         }
 
         switch (sortBy) {

@@ -22,7 +22,6 @@ const productSchema = new mongoose.Schema({
     isNewArrival: { type: Boolean, default: false },
     isBestSelling: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
-    isTrending: { type: Boolean, default: false },
     showOnHomepage: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
