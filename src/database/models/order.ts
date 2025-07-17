@@ -25,6 +25,8 @@ const orderSchema = new mongoose.Schema({
         email: { type: String },
     },
     trackingId: { type: String },
+    razorpayPaymentId: { type: String },
+    razorpaySignature: { type: String },
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true, versionKey: false });
 

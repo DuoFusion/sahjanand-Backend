@@ -1,5 +1,5 @@
 import { ADMIN_ROLES, apiResponse, razorpay } from "../../common";
-import { addressModel, orderModel } from "../../database";
+import { addressModel, cartModel, orderModel } from "../../database";
 import { responseMessage, countData, reqInfo, findAllWithPopulateWithSorting } from "../../helper";
 import crypto from 'crypto';
 
@@ -182,7 +182,7 @@ export const getOrder = async (req, res) => {
 };
 
 export const verifyRazorpayPayment = async (req, res) => {
-    let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body, { user } = req.headers;
     try {
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
@@ -190,8 +190,13 @@ export const verifyRazorpayPayment = async (req, res) => {
             .update(sign)
             .digest("hex");
 
-        if (razorpay_signature === expectedSignature) return res.json(200).json(new apiResponse(200, responseMessage?.getDataSuccess("signature"), {}, {}));
-        return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
+        if (razorpay_signature !== expectedSignature) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
+
+        const order = await orderModel.findOneAndUpdate({ _id: new ObjectId(razorpay_order_id) }, { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, orderStatus: 'paid' }, { new: true });
+
+        await cartModel.deleteMany({ userId: new ObjectId(user._id) });
+
+        return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("Order"), { order }, {}));
 
     } catch (error) {
         console.log(error);
