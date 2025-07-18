@@ -24,6 +24,8 @@ const userSchema: any = new mongoose.Schema({
         linkedin: { type: String },
     },
     newsLetterImage: { type: String },
+    whatsappNumber: { type: String },
+    whatsappMessage: { type: String },
     headerOffer: [{ type: String }],
     wishlists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'product' }],
     isDeleted: { type: Boolean, default: false },
