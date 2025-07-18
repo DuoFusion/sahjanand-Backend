@@ -1,6 +1,6 @@
 import { ADMIN_ROLES, apiResponse, razorpay } from "../../common";
 import { addressModel, cartModel, orderModel } from "../../database";
-import { responseMessage, countData, reqInfo, findAllWithPopulateWithSorting } from "../../helper";
+import { responseMessage, countData, reqInfo, findAllWithPopulateWithSorting, getData, getFirstMatch, findOneAndPopulate } from "../../helper";
 import crypto from 'crypto';
 
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -206,3 +206,20 @@ export const verifyRazorpayPayment = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
     }
 }
+export const getOrderById = async (req, res) => {
+    reqInfo(req)
+    const { id } = req.params;
+    try {
+        const response = await findOneAndPopulate(orderModel, { _id: new ObjectId(id), isDeleted: false }, {}, {}, [
+            {
+                path: 'products.productId',
+                select: 'name price images description categoryId'
+            }
+        ]);
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Order'), {}, {}));
+        return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Order'), response, {}));
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    }
+};
