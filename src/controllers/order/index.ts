@@ -62,8 +62,6 @@ export const placeOrder = async (req, res) => {
             email: shippingAddress.email || user.email
         };
 
-        body.totalAmount = body.totalAmount / 100;
-
         let order = new orderModel(body);
         await order.save();
 
@@ -195,7 +193,9 @@ export const verifyRazorpayPayment = async (req, res) => {
 
         if (razorpay_signature !== expectedSignature) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
 
-        const order = await orderModel.findOneAndUpdate({ razorpayOrderId: razorpay_order_id }, { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, orderStatus: 'paid' }, { new: true });
+        const order = await orderModel.findOne({ razorpayOrderId: razorpay_order_id }).lean();
+
+        if (order) await orderModel.findOneAndUpdate({ _id: new ObjectId(order._id) }, { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, orderStatus: 'paid', totalAmount: order.totalAmount / 100 }, { new: true, timestamps: false });
 
         await cartModel.deleteMany({ userId: new ObjectId(user._id) });
 
