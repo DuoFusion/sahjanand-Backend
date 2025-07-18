@@ -171,16 +171,16 @@ export const get_user_wishlist = async (req, res) => {
     try {
         let role = await roleModel.findOne({ name: ADMIN_ROLES.USER, isDeleted: false })
         const response = await userModel.findOne({ _id: new ObjectId(user?._id), roleId: new ObjectId(role?._id), isDeleted: false })
-        .populate({
-            path: 'wishlists',
-            match: { isDeleted: false, isBlocked: false },
-            select: 'name description price images slug categoryId salePrice attributes.colorIds',
-            populate: {
-                path: 'attributes.colorIds',
-                model: 'color',
-                select: 'name colorCode'
-            }
-        }).lean();
+            .populate({
+                path: 'wishlists',
+                match: { isDeleted: false, isBlocked: false },
+                select: 'name description price images slug categoryId salePrice attributes.colorIds',
+                populate: {
+                    path: 'attributes.colorIds',
+                    model: 'color',
+                    select: 'name colorCode'
+                }
+            }).lean();
 
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}));
 
@@ -226,7 +226,7 @@ export const get_admin_data = async (req, res) => {
     reqInfo(req)
     try {
         let role = await roleModel.findOne({ name: ADMIN_ROLES.ADMIN, isDeleted: false })
-        let response = await userModel.findOne({ roleId: new ObjectId(role?._id), isDeleted: false }).select('email phoneNumber address city state zipCode country gender socialMedia headerOffer newsLetterImage lat long whatsappNumber whatsappMessage').lean()
+        let response = await userModel.findOne({ roleId: new ObjectId(role?._id), isDeleted: false }).select('email phoneNumber address city state zipCode country gender socialMedia headerOffer newsLetterImage lat long whatsappNumber whatsappMessage mapLink').lean()
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}))
         return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("User"), response, {}))
     } catch (error) {
