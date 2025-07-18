@@ -26,6 +26,8 @@ const userSchema: any = new mongoose.Schema({
     newsLetterImage: { type: String },
     whatsappNumber: { type: String },
     whatsappMessage: { type: String },
+    razorpayKeyId: { type: String },
+    razorpayKeySecret: { type: String },
     headerOffer: [{ type: String }],
     wishlists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'product' }],
     isDeleted: { type: Boolean, default: false },

@@ -1,7 +1,9 @@
-import { ADMIN_ROLES, apiResponse, razorpay } from "../../common";
-import { addressModel, cartModel, orderModel } from "../../database";
+import { ADMIN_ROLES, apiResponse } from "../../common";
+import { addressModel, cartModel, orderModel, roleModel, userModel } from "../../database";
 import { responseMessage, countData, reqInfo, findAllWithPopulateWithSorting, getData, getFirstMatch, findOneAndPopulate } from "../../helper";
 import crypto from 'crypto';
+import Razorpay from 'razorpay';
+
 
 const ObjectId = require('mongoose').Types.ObjectId;
 
@@ -91,6 +93,14 @@ export const createRazorpayOrder = async (payload) => {
             currency,
             receipt,
         };
+
+        let role = await roleModel.findOne({ name: ADMIN_ROLES.ADMIN, isDeleted: false })
+        let user = await userModel.findOne({ roleId: new ObjectId(role?._id), isDeleted: false }).select('razorpayKeyId razorpayKeySecret').lean()
+        const razorpay = new Razorpay({
+            key_id: user.razorpayKeyId,
+            key_secret: user.razorpayKeySecret,
+        })
+        
         const order = await razorpay.orders.create(options);
         return order;
     } catch (error) {

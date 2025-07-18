@@ -1,5 +1,3 @@
-import Razorpay from 'razorpay';
-
 export class apiResponse {
     private status: number | null
     private message: string | null
@@ -39,7 +37,3 @@ export const FAQ_CATEGORIES = {
     SECURITY: 'security'
 }
 
-export const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-})

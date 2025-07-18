@@ -234,3 +234,16 @@ export const get_admin_data = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
     }
 }
+
+export const get_admin_razorpay_data = async (req, res) => {
+    reqInfo(req)
+    try {
+        let role = await roleModel.findOne({ name: ADMIN_ROLES.ADMIN, isDeleted: false })
+        let response = await userModel.findOne({ roleId: new ObjectId(role?._id), isDeleted: false }).select('razorpayKeyId razorpayKeySecret').lean()
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}))
+        return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("User"), response, {}))
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
+    }
+}
