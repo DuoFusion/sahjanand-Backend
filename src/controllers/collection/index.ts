@@ -203,7 +203,7 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter,offerFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
@@ -231,6 +231,10 @@ export const getCollectionFilterWithProducts = async (req, res) => {
 
         if(featuredFilter) {
             criteria.isFeatured = featuredFilter;
+        }
+        
+        if(offerFilter) {
+            criteria.isOffer = offerFilter;
         }
 
         switch (sortBy) {
