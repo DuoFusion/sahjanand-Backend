@@ -10,9 +10,9 @@ on:
 
 jobs:
   deploy-to-dev:
+    runs-on: ubu    ntu-latest
     name: Deploy Sahajanand-BE to Dev
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
+    if: ${{github.ref == 'refs/heads/dev'}}
 
     steps:
     - name: Checkout code
@@ -25,19 +25,18 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
 
-    - name: Deploy to Dev Server
-      run: |
-        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@82.29.160.246 << 'EOF'
-          cd /sahajanand/dev/sahajanand-Backend
-          git pull origin dev
-          npm install
-          pm2 restart sahajanand-BE-dev
-        EOF
+    - name: Test SSH Connection for BE
+        run: ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 "echo 'SSH connection successful!'"
+  
+    - name: Deploy sahjanand-BE changes to Dev via SSH
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 \
+          "cd /home/ubuntu/sahajanand/dev/sahjanand-Backend && git pull origin main && npm i && pm2 restart sahajanand-BE-dev"
 
   deploy-to-main:
-    name: Deploy Sahajanand-BE to Live
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    name: Deploy Sahajanand-BE to Live
+    if: ${{github.ref == 'refs/heads/main'}}
 
     steps:
     - name: Checkout code
@@ -50,11 +49,10 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
 
-    - name: Deploy to Live Server
-      run: |
-        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@82.29.160.246 << 'EOF'
-          cd /sahajanand/live/sahajanand-Backend
-          git pull origin main
-          npm install
-          pm2 restart sahajanand-BE-live
-        EOF
+    - name: Test SSH Connection for BE
+        run: ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 "echo 'SSH connection successful!'"
+  
+    - name: Deploy sahjanand-BE changes to Main via SSH
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 \
+          "cd /home/ubuntu/sahajanand/live/sahjanand-Backend && git pull origin main && npm i && pm2 restart sahajanand-BE-live"
