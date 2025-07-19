@@ -13,6 +13,5 @@ router.post('/add', bannerController.createBanner);
 router.post('/edit', bannerController.updateBanner);
 router.delete('/:id', bannerController.deleteBanner);
 router.get('/', bannerController.getBanners);
-router.post('/sort', bannerController.sortBanners);
 
 export const bannerRoutes = router; 

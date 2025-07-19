@@ -112,20 +112,3 @@ export const getUserBanners = async (req, res) => {
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
 };
-
-export const sortBanners = async (req, res) => {
-    reqInfo(req);
-    try {
-        const { sortedIds } = req.body; // Array of banner IDs in new order
-        if (!Array.isArray(sortedIds)) {
-            return res.status(400).json(new apiResponse(400, 'sortedIds must be an array', {}, {}));
-        }
-        for (let i = 0; i < sortedIds.length; i++) {
-            await updateData(bannerModel, { _id: sortedIds[i] }, { priority: i }, {});
-        }
-        return res.status(200).json(new apiResponse(200, 'Banner priorities updated', {}, {}));
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
-    }
-}; 
