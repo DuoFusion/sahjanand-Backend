@@ -39,20 +39,20 @@ jobs:
     if: ${{github.ref == 'refs/heads/main'}}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
 
-    - name: Test SSH Connection for BE
+      - name: Test SSH Connection for BE
         run: ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 "echo 'SSH connection successful!'"
-  
-    - name: Deploy sahjanand-BE changes to Main via SSH
+
+      - name: Deploy sahjanand-BE changes to Main via SSH
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 \
-          "cd /home/ubuntu/sahajanand/live/sahjanand-Backend && git pull origin main && npm i && pm2 restart sahajanand-BE-live"
+          "cd /home/ubuntu/sahajanand/live/sahajanand-Backend && git pull origin main && npm i && pm2 restart sahajanand-BE-live"
