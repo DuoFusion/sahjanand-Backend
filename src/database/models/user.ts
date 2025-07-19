@@ -31,6 +31,8 @@ const userSchema: any = new mongoose.Schema({
     wishlists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'product' }],
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
+    freeShippingThreshold: { type: Number, default: 0 },
+    shippingCharge: { type: Number, default: 0 },
     lastLogin: { type: Date },
 }, { timestamps: true, versionKey: false })
 
