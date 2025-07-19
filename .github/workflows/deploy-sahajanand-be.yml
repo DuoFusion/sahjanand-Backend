@@ -31,7 +31,7 @@ jobs:
       - name: Deploy sahjanand-BE changes to Dev via SSH
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 \
-          "cd /home/ubuntu/sahajanand/dev/sahajanand-Backend && git pull origin main && npm i && pm2 restart sahajanand-BE-dev"
+          "cd /home/ubuntu/sahajanand/dev/sahajanand-Backend && git pull origin dev && npm i && pm2 restart sahajanand-BE-dev"
 
   deploy-to-main:
     runs-on: ubuntu-latest
