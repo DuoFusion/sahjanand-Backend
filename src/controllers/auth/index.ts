@@ -15,9 +15,9 @@ export const signUp = async (req, res) => {
     try {
         let body = req.body
         let isAlready: any = await userModel.findOne({ email: body?.email, isDeleted: false })
-        if (isAlready) return res.status(409).json(new apiResponse(409, responseMessage?.alreadyEmail, {}, {}))
+        if (isAlready) return res.status(404).json(new apiResponse(404, responseMessage?.alreadyEmail, {}, {}))
         isAlready = await userModel.findOne({ phoneNumber: body?.phoneNumber, isDeleted: false })
-        if (isAlready) return res.status(409).json(new apiResponse(409, "phone number exist already", {}, {}))
+        if (isAlready) return res.status(404).json(new apiResponse(404, "phone number exist already", {}, {}))
 
         if (isAlready?.isBlocked == true) return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}))
 
@@ -42,11 +42,11 @@ export const login = async (req, res) => {
     try {
         response = await userModel.findOne({ email: body?.email, isDeleted: false }).lean()
 
-        if (!response) return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}))
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.invalidUserPasswordEmail, {}, {}))
         if (response?.isBlocked == true) return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}))
 
         const passwordMatch = await bcryptjs.compare(body.password, response.password)
-        if (!passwordMatch) return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}))
+        if (!passwordMatch) return res.status(404).json(new apiResponse(404, responseMessage?.invalidUserPasswordEmail, {}, {}))
         const token = jwt.sign({
             _id: response._id,
             type: response.userType,

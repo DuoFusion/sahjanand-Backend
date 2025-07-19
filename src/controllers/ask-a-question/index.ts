@@ -10,7 +10,7 @@ export const createAskAQuestion = async (req, res) => {
     let body = req.body;
     try {
         const response = await createData(askAQuestionModel, body)
-        return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Ask A Question'), response, {}));
+        return res.status(404).json(new apiResponse(404, responseMessage.addDataSuccess('Ask A Question'), response, {}));
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
@@ -22,7 +22,7 @@ export const updateAskAQuestion = async (req, res) => {
     const body = req.body;
     try {
         const response = await updateData(askAQuestionModel, { _id: new ObjectId(body.aksAQuestionId) }, body, {});
-        if (!response) return res.status(400).json(new apiResponse(400, responseMessage.updateDataError('Ask A Question'), {}, {}));
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage.updateDataError('Ask A Question'), {}, {}));
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Ask A Question'), response, {}));
     } catch (error) {
         console.log(error);
