@@ -1,0 +1,60 @@
+name: Deploy Sahajanand-BE
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'sahajanand-Backend/**'
+
+jobs:
+  deploy-to-dev:
+    name: Deploy Sahajanand-BE to Dev
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH for Dev
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
+
+    - name: Deploy to Dev Server
+      run: |
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@82.29.160.246 << 'EOF'
+          cd /sahajanand/dev/sahajanand-Backend
+          git pull origin dev
+          npm install
+          pm2 restart sahajanand-BE-dev
+        EOF
+
+  deploy-to-main:
+    name: Deploy Sahajanand-BE to Live
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH for Live
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
+
+    - name: Deploy to Live Server
+      run: |
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@82.29.160.246 << 'EOF'
+          cd /sahajanand/live/sahajanand-Backend
+          git pull origin main
+          npm install
+          pm2 restart sahajanand-BE-live
+        EOF
