@@ -1,9 +1,12 @@
+import { config } from '../../../config';
 import { ADMIN_ROLES, apiResponse } from '../../common';
 import { userModel, roleModel, collectionModel } from '../../database';
 import { countData, getData, reqInfo, responseMessage } from '../../helper';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'
 
 const ObjectId = require("mongoose").Types.ObjectId
+const jwt_token_secret = config.JWT_TOKEN_SECRET
 
 export const add_user = async (req, res) => {
     reqInfo(req)
@@ -24,7 +27,17 @@ export const add_user = async (req, res) => {
 
         let response = await new userModel(body).save()
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.addDataError, {}, {}))
-        return res.status(200).json(new apiResponse(200, responseMessage?.addDataSuccess("user"), response, {}))
+        let user = await userModel.findOne({ _id: new ObjectId(response?._id) }).lean()
+        
+        const token = jwt.sign({
+            _id: user._id,
+            type: user.userType,
+            status: "Login",
+            generatedOn: (new Date().getTime())
+        }, jwt_token_secret)
+
+        user.token = token
+        return res.status(200).json(new apiResponse(200, responseMessage?.addDataSuccess("user"), user, {}))
     } catch (error) {
         console.log(error);
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, {}))
