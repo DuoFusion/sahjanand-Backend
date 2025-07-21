@@ -203,7 +203,7 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter,offerFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter, offerFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
@@ -212,28 +212,28 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (collectionFilter) {
-            collectionCriteria._id = { $in: [new ObjectId(collectionFilter)] };
+            collectionCriteria._id = { $in: collectionFilter.map(id => new ObjectId(id)) };
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;
         }
 
         if (colorFilter) {
-            criteria['attributes.colorIds'] = { $in: [new ObjectId(colorFilter)] };
+            criteria['attributes.colorIds'] = { $in: colorFilter.map(id => new ObjectId(id)) };
         }
 
         if (materialFilter) {
-            criteria['attributes.materialIds'] = { $in: [new ObjectId(materialFilter)] };
-        }
-        
-        if (occasionFilter) {
-            criteria['attributes.occasionIds'] = { $in: [new ObjectId(occasionFilter)] };
+            criteria['attributes.materialIds'] = { $in: materialFilter.map(id => new ObjectId(id)) };
         }
 
-        if(featuredFilter) {
+        if (occasionFilter) {
+            criteria['attributes.occasionIds'] = { $in: occasionFilter.map(id => new ObjectId(id)) };
+        }
+
+        if (featuredFilter) {
             criteria.isFeatured = featuredFilter;
         }
-        
-        if(offerFilter) {
+
+        if (offerFilter) {
             criteria.isOffer = offerFilter;
         }
 
@@ -262,11 +262,11 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (categoryFilter) {
-            criteria.categoryId = new ObjectId(categoryFilter);
+            criteria.categoryId = { $in: categoryFilter.map(id => new ObjectId(id)) };
         }
 
         if (uniqueCategoryFilter) {
-            criteria.uniqueCategoryId = new ObjectId(uniqueCategoryFilter);
+            criteria.uniqueCategoryId = { $in: uniqueCategoryFilter.map(id => new ObjectId(id)) };
         }
 
         criteria.isDeleted = false

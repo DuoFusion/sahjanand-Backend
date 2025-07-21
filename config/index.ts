@@ -24,4 +24,5 @@ export const config = {
   GMAIL_CLIENT_ID: process.env.GMAIL_CLIENT_ID,
   GMAIL_CLIENT_SECRET: process.env.GMAIL_CLIENT_SECRET,
   GMAIL_PASSWORD: process.env.GMAIL_PASSWORD,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 }

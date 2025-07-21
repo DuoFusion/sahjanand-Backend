@@ -6,7 +6,7 @@ const router = Router();
 
 router.use(userJWT)
 router.get('/user', collectionController.getUserCollection);
-router.get('/products/filter', collectionController.getCollectionFilterWithProducts);
+router.post('/products/filter', collectionController.getCollectionFilterWithProducts);
 router.get('/products/:id', collectionController.getCollectionWithProducts);
 
 router.use(adminJWT)
