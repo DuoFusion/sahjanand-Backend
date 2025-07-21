@@ -24,7 +24,9 @@ export const addToCart = async (req, res) => {
         if (!cart) {
             cart = await new cartModel({ userId: new ObjectId(user?._id), products: [{ productId, quantity, color, size, price }] }).save();
         } else {
-            const index = cart.products.findIndex(p => p.productId.toString() === productId);
+            const index = cart.products.findIndex(
+                p => p.productId.toString() === productId && p.color === color
+            );
             if (index > -1) {
                 cart.products[index].quantity += quantity;
             } else {
@@ -45,7 +47,7 @@ export const updateCartItem = async (req, res) => {
     try {
         let cart = await cartModel.findOne({ userId: new ObjectId(user?._id), isDeleted: false });
         if (!cart) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Cart'), {}, {}));
-        const index = cart.products.findIndex(p => p.productId.toString() === productId);
+        const index = cart.products.findIndex(p => p.productId.toString() === productId && p.color === color);
         if (index === -1) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Product in Cart'), {}, {}));
         cart.products[index].quantity = quantity;
         if (color !== undefined) cart.products[index].color = color;
