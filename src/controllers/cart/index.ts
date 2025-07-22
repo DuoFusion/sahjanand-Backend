@@ -53,16 +53,37 @@ export const addToCart = async (req, res) => {
 
 export const updateCartItem = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { productId, color, quantity, size, price } = req.body;
+    let { user } = req.headers, { _id, productId, color, quantity, size, price } = req.body;
     try {
         let cart = await cartModel.findOne({ userId: new ObjectId(user?._id), isDeleted: false });
         if (!cart) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Cart'), {}, {}));
-        const index = await findProductIndex(cart.products, productId, color);
-        if (index === -1) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Product in Cart'), {}, {}));
-        // Update fields if provided
-        if (quantity !== undefined) cart.products[index].quantity = quantity;
-        if (size !== undefined) cart.products[index].size = size;
-        if (price !== undefined) cart.products[index].price = price;
+
+        // Find the index of the item being updated
+        const currentIndex = cart.products.findIndex(
+            p => p._id.toString() === _id
+        );
+        if (currentIndex === -1) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Product in Cart'), {}, {}));
+
+        // Check if another item with the same productId and new color exists (excluding the current item)
+        const mergeIndex = cart.products.findIndex(
+            (p, idx) => idx !== currentIndex && p.productId.toString() === productId && p.color === color
+        );
+
+        if (mergeIndex > -1) {
+            // Merge: add quantities and prices, remove the current item
+            cart.products[mergeIndex].quantity += quantity !== undefined ? quantity : cart.products[currentIndex].quantity;
+            cart.products[mergeIndex].price += price !== undefined ? price : cart.products[currentIndex].price;
+            if (size !== undefined) cart.products[mergeIndex].size = size;
+            cart.products.splice(currentIndex, 1);
+        } else {
+            // Just update the current item
+            if (productId !== undefined) cart.products[currentIndex].productId = productId;
+            if (color !== undefined) cart.products[currentIndex].color = color;
+            if (quantity !== undefined) cart.products[currentIndex].quantity = quantity;
+            if (size !== undefined) cart.products[currentIndex].size = size;
+            if (price !== undefined) cart.products[currentIndex].price = price;
+        }
+
         await cart.save();
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Cart'), cart, {}));
     } catch (error) {
