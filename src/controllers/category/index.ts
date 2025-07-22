@@ -99,7 +99,7 @@ export const getUserCategory = async (req, res) => {
             options.skip = (parseInt(page) - 1) * parseInt(limit);
             options.limit = parseInt(limit);
         }
-        
+
         const response = await getDataWithSorting(categoryModel, criteria, {}, options);
         const totalCount = await countData(categoryModel, criteria);
 
