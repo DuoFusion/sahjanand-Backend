@@ -24,12 +24,31 @@ export const addToCart = async (req, res) => {
         if (!cart) {
             cart = await new cartModel({ userId: new ObjectId(user?._id), products: [{ productId, quantity, color, size, price }] }).save();
         } else {
-            const index = cart.products.findIndex(p => p.productId.toString() === productId);
+            const index = cart.products.findIndex(
+                p => p.productId.toString() === productId && p.color === color
+            );
             if (index > -1) {
                 cart.products[index].quantity += quantity;
             } else {
                 cart.products.push({ productId, quantity, color, size, price });
             }
+            // Merge duplicates for same productId and color
+            const mergedProducts = [];
+            const productMap = {};
+
+            for (const prod of cart.products) {
+                const key = prod.productId.toString() + '_' + prod.color;
+                if (!productMap[key]) {
+                    productMap[key] = { ...prod.toObject ? prod.toObject() : prod };
+                } else {
+                    productMap[key].quantity += prod.quantity;
+                    productMap[key].price += prod.price;
+                }
+            }
+            for (const key in productMap) {
+                mergedProducts.push(productMap[key]);
+            }
+            cart.products = mergedProducts;
             await cart.save();
         }
         return res.status(200).json(new apiResponse(200, responseMessage.addDataSuccess('Cart'), cart, {}));
@@ -45,12 +64,28 @@ export const updateCartItem = async (req, res) => {
     try {
         let cart = await cartModel.findOne({ userId: new ObjectId(user?._id), isDeleted: false });
         if (!cart) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Cart'), {}, {}));
-        const index = cart.products.findIndex(p => p.productId.toString() === productId);
+        const index = cart.products.findIndex(p => p.productId.toString() === productId && p.color === color);
         if (index === -1) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Product in Cart'), {}, {}));
         cart.products[index].quantity = quantity;
         if (color !== undefined) cart.products[index].color = color;
         if (size !== undefined) cart.products[index].size = size;
         if (price !== undefined) cart.products[index].price = price;
+        // Merge duplicates for same productId and color
+        const mergedProducts = [];
+        const productMap = {};
+        for (const prod of cart.products) {
+            const key = prod.productId.toString() + '_' + prod.color;
+            if (!productMap[key]) {
+                productMap[key] = { ...prod.toObject ? prod.toObject() : prod };
+            } else {
+                productMap[key].quantity += prod.quantity;
+                productMap[key].price += prod.price;
+            }
+        }
+        for (const key in productMap) {
+            mergedProducts.push(productMap[key]);
+        }
+        cart.products = mergedProducts;
         await cart.save();
         return res.status(200).json(new apiResponse(200, responseMessage.updateDataSuccess('Cart'), cart, {}));
     } catch (error) {

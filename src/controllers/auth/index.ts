@@ -6,6 +6,9 @@ import { userModel, userSessionModel } from '../../database'
 import { apiResponse } from '../../common'
 import { email_verification_mail, reqInfo, responseMessage } from '../../helper'
 import { config } from '../../../config'
+import { OAuth2Client } from 'google-auth-library'
+const googleClient = new OAuth2Client(config.GOOGLE_CLIENT_ID)
+
 
 const ObjectId = require('mongoose').Types.ObjectId
 const jwt_token_secret = config.JWT_TOKEN_SECRET
@@ -15,9 +18,9 @@ export const signUp = async (req, res) => {
     try {
         let body = req.body
         let isAlready: any = await userModel.findOne({ email: body?.email, isDeleted: false })
-        if (isAlready) return res.status(409).json(new apiResponse(409, responseMessage?.alreadyEmail, {}, {}))
+        if (isAlready) return res.status(404).json(new apiResponse(404, responseMessage?.alreadyEmail, {}, {}))
         isAlready = await userModel.findOne({ phoneNumber: body?.phoneNumber, isDeleted: false })
-        if (isAlready) return res.status(409).json(new apiResponse(409, "phone number exist already", {}, {}))
+        if (isAlready) return res.status(404).json(new apiResponse(404, "phone number exist already", {}, {}))
 
         if (isAlready?.isBlocked == true) return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}))
 
@@ -42,11 +45,11 @@ export const login = async (req, res) => {
     try {
         response = await userModel.findOne({ email: body?.email, isDeleted: false }).lean()
 
-        if (!response) return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}))
+        if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.invalidUserPasswordEmail, {}, {}))
         if (response?.isBlocked == true) return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}))
 
         const passwordMatch = await bcryptjs.compare(body.password, response.password)
-        if (!passwordMatch) return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}))
+        if (!passwordMatch) return res.status(404).json(new apiResponse(404, responseMessage?.invalidUserPasswordEmail, {}, {}))
         const token = jwt.sign({
             _id: response._id,
             type: response.userType,
@@ -176,6 +179,54 @@ export const adminLogin = async (req: Request, res: Response) => { //email or pa
         return res.status(200).json(new apiResponse(200, responseMessage?.loginSuccess, response, {}))
 
     } catch (error) {
+        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error))
+    }
+}
+
+export const googleSignUp = async (req: Request, res: Response) => {
+    reqInfo(req)
+    try {
+        const { idToken, address } = req.body
+        if (!idToken) return res.status(400).json(new apiResponse(400, "Google ID token required", {}, {}))
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken,
+            audience: config.GOOGLE_CLIENT_ID,
+        })
+        const payload = ticket.getPayload()
+        if (!payload) return res.status(400).json(new apiResponse(400, "Invalid Google token", {}, {}))
+
+        const { email, given_name, family_name, picture, sub: googleId } = payload
+        
+        let user = await userModel.findOne({ email, isDeleted: false })
+        if (!user) {
+            user = await new userModel({
+                email,
+                firstName: given_name,
+                lastName: family_name,
+                profilePhoto: picture,
+                googleId,
+                userType: "user",
+                address: address || undefined,
+            }).save()
+        }
+
+        const token = jwt.sign({
+            _id: user._id,
+            type: user.userType,
+            status: "Login",
+            generatedOn: (new Date().getTime())
+        }, jwt_token_secret)
+
+        const response = {
+            isEmailVerified: user.isEmailVerified,
+            userType: user.userType,
+            _id: user._id,
+            token,
+        }
+        return res.status(200).json(new apiResponse(200, responseMessage?.loginSuccess, response, {}))
+    } catch (error) {
+        console.log(error)
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error))
     }
 }

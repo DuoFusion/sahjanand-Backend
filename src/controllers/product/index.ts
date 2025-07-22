@@ -8,7 +8,9 @@ export const productAttributePopulate = [
     { path: 'attributes.sizeIds', model: 'size', select: 'name' },
     { path: 'attributes.materialIds', model: 'material', select: 'name' },
     { path: 'attributes.fabricIds', model: 'fabric', select: 'name' },
-    { path: 'attributes.occasionIds', model: 'occasion', select: 'name' }
+    { path: 'attributes.occasionIds', model: 'occasion', select: 'name' },
+    { path: 'categoryId', model: 'category', select: 'name' },
+    { path: 'uniqueCategoryId', model: 'unique-category', select: 'name' },
 ];
 
 let ObjectId = require('mongoose').Types.ObjectId;

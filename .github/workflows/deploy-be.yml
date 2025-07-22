@@ -1,0 +1,58 @@
+name: Deploy sahajanand-Backend
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'sahajanand-Backend/**'
+
+jobs:
+  deploy-to-dev:
+    runs-on: ubuntu-latest
+    name: Deploy sahajanand-Backend to Dev
+    if: ${{ github.ref == 'refs/heads/dev' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH for BE
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
+
+    - name: Test SSH Connection for BE
+      run: ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 "echo 'SSH connection successful!'"
+
+    - name: Deploy sahajanand-Backend changes to Dev via SSH
+      run: |
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 \
+        "cd /home/ubuntu/sahajanand/dev/sahajanand-Backend && git pull origin dev && npm i && pm2 restart sahajanand-BE-dev"
+
+  deploy-to-main:
+    runs-on: ubuntu-latest
+    name: Deploy sahajanand-Backend to Main
+    if: ${{ github.ref == 'refs/heads/main' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH for BE
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 82.29.160.246 >> ~/.ssh/known_hosts
+
+    - name: Test SSH Connection for BE
+      run: ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 "echo 'SSH connection successful!'"
+
+    - name: Deploy sahajanand-Backend changes to Main via SSH
+      run: |
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@82.29.160.246 \
+        "cd /home/ubuntu/sahajanand/live/sahajanand-Backend && git pull origin main && npm i && pm2 restart sahajanand-BE-live"
