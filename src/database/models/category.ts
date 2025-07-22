@@ -6,7 +6,7 @@ const categorySchema = new mongoose.Schema({
     description: { type: String },
     image: { type: String },
     parent: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
-    level: { type: Number, default: 1 },
+    priority: { type: Number, default: 1 },
     isFeatured: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
