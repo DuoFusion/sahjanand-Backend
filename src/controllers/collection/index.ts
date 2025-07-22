@@ -1,7 +1,7 @@
 import { apiResponse } from '../../common';
 import { collectionModel, productModel } from '../../database';
 import { reqInfo, responseMessage } from '../../helper';
-import { getData, countData, findAllWithPopulate } from '../../helper/database_service';
+import { getData, countData, findAllWithPopulate, getDataWithSorting } from '../../helper/database_service';
 import { addWishlistStatus, productAttributePopulate } from '../product/index';
 
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -130,12 +130,13 @@ export const getUserCollection = async (req, res) => {
     let { typeFilter } = req.query;
     try {
         let criteria: any = {}, options: any = { lean: true };
+        options.sort = { priority: 1 }
         criteria.isDeleted = false;
         criteria.isBlocked = false;
         if (typeFilter) {
             criteria.type = typeFilter;
         }
-        const collection = await getData(collectionModel, criteria, {}, options);
+        const collection = await getDataWithSorting(collectionModel, criteria, {}, options);
         return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), collection, {}));
     } catch (error) {
         console.log(error)
