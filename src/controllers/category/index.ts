@@ -6,6 +6,9 @@ export const createCategory = async (req, res) => {
     reqInfo(req)
     try {
         const body = req.body;
+
+        let isExist = await categoryModel.findOne({priority: body.priority, isDeleted: false})
+        if(isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("priority"), {}, {}))
         if (body.parent) {
             const parent = await getFirstMatch(categoryModel, { _id: body.parent }, {}, {});
             if (parent) body.level = parent.level + 1;
