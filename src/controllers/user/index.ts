@@ -195,8 +195,6 @@ export const get_user_wishlist = async (req, res) => {
                 }
             }).lean();
 
-        if (!response) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("User"), {}, {}));
-
         return res.status(200).json(new apiResponse(200, responseMessage?.getDataSuccess("Wishlist"), {
             wishlist: response.wishlists || [],
             totalItems: response.wishlists ? response.wishlists.length : 0
