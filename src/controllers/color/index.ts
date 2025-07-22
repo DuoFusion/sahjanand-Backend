@@ -1,6 +1,6 @@
-import { createData, getData, updateData, deleteData, reqInfo, responseMessage, countData } from "../../helper";
+import { createData, getData, updateData, deleteData, reqInfo, responseMessage, countData, updateMany } from "../../helper";
 import { apiResponse } from "../../common";
-import { colorModel } from "../../database";
+import { colorModel, productModel } from "../../database";
 
 const ObjectId = require("mongoose").Types.ObjectId;
 
@@ -11,7 +11,7 @@ export const createColor = async (req, res) => {
 
         let isExist = await colorModel.findOne({ name: body.name, isDeleted: false })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Name"), {}, {}));
-        
+
         isExist = await colorModel.findOne({ priority: body.priority, isDeleted: false })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Priority"), {}, {}));
 
@@ -31,7 +31,7 @@ export const updateColor = async (req, res) => {
 
         let isExist = await colorModel.findOne({ name: body.name, isDeleted: false, _id: { $ne: new ObjectId(body.colorId) } })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Name"), {}, {}));
-        
+
         isExist = await colorModel.findOne({ priority: body.priority, isDeleted: false, _id: { $ne: new ObjectId(body.colorId) } })
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage.dataAlreadyExist("Priority"), {}, {}));
 
@@ -50,6 +50,8 @@ export const deleteColor = async (req, res) => {
     try {
         const response = await deleteData(colorModel, { _id: new ObjectId(id), isDeleted: false });
         if (!response) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Color'), {}, {}));
+
+        await updateMany(productModel, { 'attributes.colorIds': new ObjectId(id) }, { $pull: { 'attributes.colorIds': new ObjectId(id) } }, {});
         return res.status(200).json(new apiResponse(200, responseMessage.deleteDataSuccess('Color'), response, {}));
     } catch (error) {
         console.log(error)

@@ -14,4 +14,4 @@ const cartSchema = new mongoose.Schema({
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true });
 
-export const cartModel = mongoose.model('cart', cartSchema); 
+export const cartModel = mongoose.model('cart', cartSchema)
