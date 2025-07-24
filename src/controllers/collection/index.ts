@@ -204,7 +204,7 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter, offerFilter } = req.query, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter, offerFilter } = req.body, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
     try {
 
@@ -261,7 +261,8 @@ export const getCollectionFilterWithProducts = async (req, res) => {
                 options.sort = { createdAt: -1 };
                 break;
         }
-
+        
+        console.log("category => ",categoryFilter);
         if (categoryFilter) {
             criteria.categoryId = { $in: categoryFilter.map(id => new ObjectId(id)) };
         }
@@ -276,7 +277,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
             let collections = await getData(collectionModel, collectionCriteria, {}, {});
             return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: collections[0]?.products }, {}));
         }
-
+        
         const products = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
         const productsWithWishlistStatus = await addWishlistStatus(products, userId);
 
