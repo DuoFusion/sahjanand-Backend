@@ -3,6 +3,8 @@ import { addressModel, cartModel, orderModel, roleModel, userModel } from "../..
 import { responseMessage, countData, reqInfo, findAllWithPopulateWithSorting, getData, getFirstMatch, findOneAndPopulate } from "../../helper";
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
+import { shipRocketService } from '../../helper/ship-rocket-service';
+import { shipRocketOrderModel } from '../../database';
 
 
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -205,7 +207,77 @@ export const verifyRazorpayPayment = async (req, res) => {
 
         const order = await orderModel.findOne({ razorpayOrderId: razorpay_order_id }).lean();
 
-        if (order) await orderModel.findOneAndUpdate({ _id: new ObjectId(order._id) }, { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, orderStatus: 'paid', totalAmount: order.totalAmount / 100 }, { new: true, timestamps: false });
+        if (order) {
+            await orderModel.findOneAndUpdate(
+                { _id: new ObjectId(order._id) },
+                { razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature, orderStatus: 'paid', totalAmount: order.totalAmount / 100 },
+                { new: true, timestamps: false }
+            );
+
+            // 🚀 Shiprocket Integration: Automatically create Shiprocket order after payment
+            // Check if Shiprocket order already exists
+            const existingShiprocketOrder = await shipRocketOrderModel.findOne({
+                internalOrderId: order._id,
+                isDeleted: false
+            });
+            if (!existingShiprocketOrder) {
+                // Convert internal order to Shiprocket format
+                const shiprocketPayload = await shipRocketService.convertInternalOrderToShiprocket(order._id);
+                if (shiprocketPayload) {
+                    const validation = shipRocketService.validateOrderPayload(shiprocketPayload);
+                    if (validation.isValid) {
+                        const shiprocketResponse = await shipRocketService.createOrder(shiprocketPayload);
+                        if (shiprocketResponse.status === 200) {
+                            // Save Shiprocket order in DB
+                            const shiprocketOrderData = {
+                                internalOrderId: order._id,
+                                shiprocketOrderId: shiprocketResponse.data.shipment_id,
+                                orderId: shiprocketPayload.order_id,
+                                orderDate: new Date(shiprocketPayload.order_date),
+                                pickupLocation: shiprocketPayload.pickup_location,
+                                customerName: shiprocketPayload.billing_customer_name,
+                                customerEmail: shiprocketPayload.billing_email,
+                                customerPhone: shiprocketPayload.billing_phone,
+                                shippingAddress: {
+                                    name: shiprocketPayload.billing_customer_name,
+                                    phone: shiprocketPayload.billing_phone,
+                                    address: shiprocketPayload.billing_address,
+                                    address2: shiprocketPayload.billing_address_2,
+                                    city: shiprocketPayload.billing_city,
+                                    state: shiprocketPayload.billing_state,
+                                    country: shiprocketPayload.billing_country,
+                                    postalCode: shiprocketPayload.billing_pincode,
+                                    email: shiprocketPayload.billing_email
+                                },
+                                items: shiprocketPayload.order_items.map(item => ({
+                                    name: item.name,
+                                    sku: item.sku,
+                                    units: item.units,
+                                    sellingPrice: item.selling_price,
+                                    discount: item.discount || 0,
+                                    tax: item.tax || 0,
+                                    hsn: item.hsn
+                                })),
+                                paymentMethod: shiprocketPayload.payment_method,
+                                subTotal: shiprocketPayload.sub_total,
+                                length: shiprocketPayload.length,
+                                breadth: shiprocketPayload.breadth,
+                                height: shiprocketPayload.height,
+                                weight: shiprocketPayload.weight,
+                                status: 'pending'
+                            };
+                            await shipRocketOrderModel.create(shiprocketOrderData);
+
+                            // Update internal order with Shiprocket reference
+                            await orderModel.findOneAndUpdate(
+                                { _id: order._id },
+                                { shiprocketOrderId: shiprocketResponse.data.shipment_id, orderStatus: 'processing' }
+                            );
+                        }
+                    }
+                }
+            }
+        }
 
         await cartModel.deleteMany({ userId: new ObjectId(user._id) });
 

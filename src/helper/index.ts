@@ -6,4 +6,5 @@ export * from "./aws_sns"
 export * from "./notification"
 export * from "./s3"
 export * from "./database_service"
+export * from './ship-rocket-service';
 

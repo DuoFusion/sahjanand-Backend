@@ -28,3 +28,4 @@ export * as fabricController from "./fabric"
 export * as sizeController from "./size"
 export * as ourStoryController from "./our-story"
 export * as uniqueCategoryController from "./unique-category"
+export * as shipRocketController from "./ship-rocket";
