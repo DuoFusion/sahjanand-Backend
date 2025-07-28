@@ -31,7 +31,6 @@ const orderSchema = new mongoose.Schema({
     razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
     razorpaySignature: { type: String },
-    // Shiprocket integration fields
     shiprocketOrderId: { type: String },
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true, versionKey: false });

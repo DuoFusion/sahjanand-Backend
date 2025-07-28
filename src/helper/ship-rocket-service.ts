@@ -519,34 +519,38 @@ class ShiprocketService {
 
             for (const product of order.products) {
                 const productDetails = await productModel.findOne({ 
-                    _id: product.productId._id 
+                    _id: new ObjectId(product.productId._id)
                 }).lean();
 
                 if (productDetails) {
                     orderItems.push({
                         name: productDetails.name || 'Product',
                         sku: productDetails.sku || `SKU_${product.productId._id}`,
-                        units: product.quantity,
-                        selling_price: product.price,
+                        units: product?.quantity,
+                        selling_price: product?.price,
                         discount: 0, // You can calculate discount if needed
                         tax: 0, // You can calculate tax if needed
-                        hsn: productDetails.hsn || 0
+                        hsn: productDetails?.hsn || 0
                     });
 
                     // Calculate total weight (assuming weight is in grams)
-                    totalWeight += (productDetails.weight || 500) * product.quantity;
+                    totalWeight += (productDetails?.weight || 500) * product?.quantity;
                 }
             }
 
             // Convert weight to kg for Shiprocket
-            const weightInKg = totalWeight / 1000;
+            let weightInKg = 0;
+            if(totalWeight){
+                weightInKg = totalWeight / 1000;
+            }
 
             // Create Shiprocket order payload
             const shiprocketPayload: ShiprocketOrderPayload = {
                 order_id: order._id.toString(),
                 order_date: order.createdAt.toISOString().split('T')[0],
-                pickup_location: 'Primary',
+                pickup_location: 'SHAJANAND',
                 billing_customer_name: order.name || 'Customer',
+                billing_last_name: order.lastName || '',
                 billing_address: order.shippingAddress.address,
                 billing_city: order.shippingAddress.city,
                 billing_pincode: order.shippingAddress.zipCode,
@@ -559,7 +563,6 @@ class ShiprocketService {
                 payment_method: order.paymentStatus === 'paid' ? 'Prepaid' : 'COD',
                 sub_total: order.totalAmount,
                 weight: weightInKg,
-                // You can add package dimensions if available
                 length: 20, // Default values - adjust as needed
                 breadth: 15,
                 height: 5
