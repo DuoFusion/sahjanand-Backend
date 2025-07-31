@@ -198,13 +198,16 @@ class ShiprocketService {
      */
     async createOrder(orderData: ShiprocketOrderPayload): Promise<ShiprocketResponse> {
         try {
-            const response: AxiosResponse = await this.api.post('/external/orders/create/adhoc', orderData);
-
-            if (response.data && response.data.status === 200) {
+            const response: AxiosResponse = await this.api.post('/external/orders/create/adhoc', orderData);            console.log("Shiprocket API Response:", JSON.stringify(response.data, null, 2));
+            
+            if (response.data && response.status === 200) {
+                // Handle different response structures
+                const responseData = response.data.data || response.data;
+                
                 return {
                     status: 200,
                     message: 'Order created successfully',
-                    data: response.data.data
+                    data: responseData
                 };
             } else {
                 return {
@@ -232,7 +235,7 @@ class ShiprocketService {
                 shipment_id: orderId,
                 courier_id: courierId
             });
-
+            console.log("response => ", response);
             if (response.data && response.data.status === 200) {
                 return {
                     status: 200,
@@ -523,9 +526,15 @@ class ShiprocketService {
                 }).lean();
 
                 if (productDetails) {
+                    // Add color to the product name if available
+                    let productSku =  productDetails?.sku || 'Product';
+                    if (product.color) {
+                        productSku += ` (${product.color})`;
+                    }
+
                     orderItems.push({
-                        name: productDetails.name || 'Product',
-                        sku: productDetails.sku || `SKU_${product.productId._id}`,
+                        name: productDetails?.name,
+                        sku: productSku || `SKU_${product.productId._id}`,
                         units: product?.quantity,
                         selling_price: product?.price,
                         discount: 0, // You can calculate discount if needed
@@ -548,7 +557,7 @@ class ShiprocketService {
             const shiprocketPayload: ShiprocketOrderPayload = {
                 order_id: order._id.toString(),
                 order_date: order.createdAt.toISOString().split('T')[0],
-                pickup_location: 'SHAJANAND',
+                pickup_location: 'SHAJANAND GROUP',
                 billing_customer_name: order.name || 'Customer',
                 billing_last_name: order.lastName || '',
                 billing_address: order.shippingAddress.address,

@@ -227,52 +227,59 @@ export const verifyRazorpayPayment = async (req, res) => {
                     const validation = shipRocketService.validateOrderPayload(shiprocketPayload);
                     if (validation.isValid) {
                         const shiprocketResponse = await shipRocketService.createOrder(shiprocketPayload);
-                        if (shiprocketResponse.status === 200) {
-                            // Save Shiprocket order in DB
-                            const shiprocketOrderData = {
-                                internalOrderId: order._id,
-                                shiprocketOrderId: shiprocketResponse.data.shipment_id,
-                                orderId: shiprocketPayload.order_id,
-                                orderDate: new Date(shiprocketPayload.order_date),
-                                pickupLocation: shiprocketPayload.pickup_location,
-                                customerName: shiprocketPayload.billing_customer_name,
-                                customerEmail: shiprocketPayload.billing_email,
-                                customerPhone: shiprocketPayload.billing_phone,
-                                shippingAddress: {
-                                    name: shiprocketPayload.billing_customer_name,
-                                    phone: shiprocketPayload.billing_phone,
-                                    address: shiprocketPayload.billing_address,
-                                    address2: shiprocketPayload.billing_address_2,
-                                    city: shiprocketPayload.billing_city,
-                                    state: shiprocketPayload.billing_state,
-                                    country: shiprocketPayload.billing_country,
-                                    postalCode: shiprocketPayload.billing_pincode,
-                                    email: shiprocketPayload.billing_email
-                                },
-                                items: shiprocketPayload.order_items.map(item => ({
-                                    name: item.name,
-                                    sku: item.sku,
-                                    units: item.units,
-                                    sellingPrice: item.selling_price,
-                                    discount: item.discount || 0,
-                                    tax: item.tax || 0,
-                                    hsn: item.hsn
-                                })),
-                                paymentMethod: shiprocketPayload.payment_method,
-                                subTotal: shiprocketPayload.sub_total,
-                                length: shiprocketPayload.length,
-                                breadth: shiprocketPayload.breadth,
-                                height: shiprocketPayload.height,
-                                weight: shiprocketPayload.weight,
-                                status: 'pending'
-                            };
+                        if (shiprocketResponse.status === 200 && shiprocketResponse.data) {
+                            // The shipment_id is in shiprocketResponse.data.data.shipment_id
+                            const shipmentId = shiprocketResponse.data.shipment_id;
+                            
+                            if (!shipmentId) {
+                                console.log('Shiprocket response missing shipment_id:',     );
+                                // Continue with order processing even if Shiprocket fails
+                            } else {
+                                const shiprocketOrderData = {
+                                    internalOrderId: order._id,
+                                    shiprocketOrderId: shipmentId,
+                                    orderId: shiprocketPayload.order_id,
+                                    orderDate: new Date(shiprocketPayload.order_date),
+                                    pickupLocation: shiprocketPayload.pickup_location,
+                                    customerName: shiprocketPayload.billing_customer_name,
+                                    customerEmail: shiprocketPayload.billing_email,
+                                    customerPhone: shiprocketPayload.billing_phone,
+                                    shippingAddress: {
+                                        name: shiprocketPayload.billing_customer_name,
+                                        phone: shiprocketPayload.billing_phone,
+                                        address: shiprocketPayload.billing_address,
+                                        address2: shiprocketPayload.billing_address_2,
+                                        city: shiprocketPayload.billing_city,
+                                        state: shiprocketPayload.billing_state,
+                                        country: shiprocketPayload.billing_country,
+                                        postalCode: shiprocketPayload.billing_pincode,
+                                        email: shiprocketPayload.billing_email
+                                    },
+                                    items: shiprocketPayload.order_items.map(item => ({
+                                        name: item.name,
+                                        sku: item.sku,
+                                        units: item.units,
+                                        sellingPrice: item.selling_price,
+                                        discount: item.discount || 0,
+                                        tax: item.tax || 0,
+                                        hsn: item.hsn
+                                    })),
+                                    paymentMethod: shiprocketPayload.payment_method,
+                                    subTotal: shiprocketPayload.sub_total,
+                                    length: shiprocketPayload.length,
+                                    breadth: shiprocketPayload.breadth,
+                                    height: shiprocketPayload.height,
+                                    weight: shiprocketPayload.weight,
+                                    status: 'pending'
+                                };
                             await shipRocketOrderModel.create(shiprocketOrderData);
 
                             // Update internal order with Shiprocket reference
                             await orderModel.findOneAndUpdate(
                                 { _id: order._id },
-                                { shiprocketOrderId: shiprocketResponse.data.shipment_id, orderStatus: 'processing' }
+                                { shiprocketOrderId: shipmentId, orderStatus: 'processing' }
                             );
+                            }
                         }
                     }
                 }

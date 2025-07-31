@@ -8,7 +8,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 export const createShipRocketOrder = async (req, res) => {
     reqInfo(req);
     let { user } = req.headers, body = req.body;
-    
+
     try {
         // Validate that internal order ID is provided
         if (!body.internalOrderId) {
@@ -16,9 +16,9 @@ export const createShipRocketOrder = async (req, res) => {
         }
 
         // Check if internal order exists and belongs to user (if user is not admin)
-        const internalOrder = await orderModel.findOne({ 
-            _id: new ObjectId(body.internalOrderId), 
-            isDeleted: false 
+        const internalOrder = await orderModel.findOne({
+            _id: new ObjectId(body.internalOrderId),
+            isDeleted: false
         });
 
         if (!internalOrder) {
@@ -44,7 +44,7 @@ export const createShipRocketOrder = async (req, res) => {
 
         // Convert internal order to Shiprocket format
         const shiprocketPayload = await shipRocketService.convertInternalOrderToShiprocket(body.internalOrderId);
-        
+
         if (!shiprocketPayload) {
             return res.status(500).json(new apiResponse(500, 'Failed to convert internal order to Shiprocket format', {}, {}));
         }
@@ -57,12 +57,12 @@ export const createShipRocketOrder = async (req, res) => {
 
         // Create order on Shiprocket
         const shiprocketResponse = await shipRocketService.createOrder(shiprocketPayload);
-        
+
         if (shiprocketResponse.status !== 200) {
             return res.status(shiprocketResponse.status).json(new apiResponse(
-                shiprocketResponse.status, 
-                shiprocketResponse.message, 
-                {}, 
+                shiprocketResponse.status,
+                shiprocketResponse.message,
+                {},
                 shiprocketResponse.error
             ));
         }
@@ -112,7 +112,7 @@ export const createShipRocketOrder = async (req, res) => {
         // Update internal order with Shiprocket reference
         await orderModel.findOneAndUpdate(
             { _id: new ObjectId(body.internalOrderId) },
-            { 
+            {
                 shiprocketOrderId: shiprocketResponse.data.shipment_id,
                 orderStatus: 'processing' // Update status to indicate Shiprocket integration
             }
@@ -135,39 +135,35 @@ export const createShipRocketOrder = async (req, res) => {
  */
 export const generateAWB = async (req, res) => {
     reqInfo(req);
-    const { id } = req.params;
-    const { courierId } = req.body;
+    // const { id } = req.params;
+    const { courierId, shipmentId } = req.body;
 
     try {
-        if (!courierId) {
-            return res.status(400).json(new apiResponse(400, 'Courier ID is required', {}, {}));
-        }
-
+        if (!courierId) return res.status(400).json(new apiResponse(400, 'Courier ID is required', {}, {}));
+        
         // Find the Shiprocket order
-        const shiprocketOrder = await shipRocketOrderModel.findOne({ 
-            _id: new ObjectId(id), 
-            isDeleted: false 
+        const shiprocketOrder = await shipRocketOrderModel.findOne({
+            _id: new ObjectId(shipmentId),
+            isDeleted: false
         });
 
-        if (!shiprocketOrder) {
-            return res.status(404).json(new apiResponse(404, 'Shiprocket order not found', {}, {}));
-        }
-
+        if (!shiprocketOrder) return res.status(404).json(new apiResponse(404, 'Shiprocket order not found', {}, {}));
+        
         // Generate AWB on Shiprocket
         const awbResponse = await shipRocketService.generateAWB(shiprocketOrder.shiprocketOrderId, courierId);
-        
+
         if (awbResponse.status !== 200) {
             return res.status(awbResponse.status).json(new apiResponse(
-                awbResponse.status, 
-                awbResponse.message, 
-                {}, 
+                awbResponse.status,
+                awbResponse.message,
+                {},
                 awbResponse.error
             ));
         }
 
         // Update order with AWB details
         const updatedOrder = await shipRocketOrderModel.findOneAndUpdate(
-            { _id: new ObjectId(id) },
+            { _id: new ObjectId(shipmentId) },
             {
                 awbNumber: awbResponse.data.awb_code,
                 courierId: courierId,
@@ -181,18 +177,9 @@ export const generateAWB = async (req, res) => {
         );
 
         // Update internal order with AWB number
-        await orderModel.findOneAndUpdate(
-            { _id: shiprocketOrder.internalOrderId },
-            { 
-                trackingId: awbResponse.data.awb_code,
-                orderStatus: 'shipped'
-            }
-        );
+        await orderModel.findOneAndUpdate({ _id: shiprocketOrder.internalOrderId }, { trackingId: awbResponse.data.awb_code, orderStatus: 'shipped' });
 
-        return res.status(200).json(new apiResponse(200, 'AWB generated successfully', {
-            order: updatedOrder,
-            awbResponse: awbResponse.data
-        }, {}));
+        return res.status(200).json(new apiResponse(200, 'AWB generated successfully', { order: updatedOrder, awbResponse: awbResponse.data }, {}));
 
     } catch (error) {
         console.log(error);
@@ -209,9 +196,9 @@ export const requestPickup = async (req, res) => {
 
     try {
         // Find the Shiprocket order
-        const shiprocketOrder = await shipRocketOrderModel.findOne({ 
-            _id: new ObjectId(id), 
-            isDeleted: false 
+        const shiprocketOrder = await shipRocketOrderModel.findOne({
+            _id: new ObjectId(id),
+            isDeleted: false
         });
 
         if (!shiprocketOrder) {
@@ -224,12 +211,12 @@ export const requestPickup = async (req, res) => {
 
         // Request pickup on Shiprocket
         const pickupResponse = await shipRocketService.requestPickup(shiprocketOrder.shiprocketOrderId);
-        
+
         if (pickupResponse.status !== 200) {
             return res.status(pickupResponse.status).json(new apiResponse(
-                pickupResponse.status, 
-                pickupResponse.message, 
-                {}, 
+                pickupResponse.status,
+                pickupResponse.message,
+                {},
                 pickupResponse.error
             ));
         }
@@ -237,7 +224,7 @@ export const requestPickup = async (req, res) => {
         // Update order status
         const updatedOrder = await shipRocketOrderModel.findOneAndUpdate(
             { _id: new ObjectId(id) },
-            { 
+            {
                 status: 'processing',
                 pickupDate: new Date()
             },
@@ -269,12 +256,12 @@ export const trackShipmentByAWB = async (req, res) => {
 
         // Track shipment on Shiprocket
         const trackingResponse = await shipRocketService.trackShipment(awbNumber);
-        
+
         if (trackingResponse.status !== 200) {
             return res.status(trackingResponse.status).json(new apiResponse(
-                trackingResponse.status, 
-                trackingResponse.message, 
-                {}, 
+                trackingResponse.status,
+                trackingResponse.message,
+                {},
                 trackingResponse.error
             ));
         }
@@ -313,9 +300,9 @@ export const trackShipmentByOrderId = async (req, res) => {
 
     try {
         // Find the Shiprocket order
-        const shiprocketOrder = await shipRocketOrderModel.findOne({ 
-            _id: new ObjectId(id), 
-            isDeleted: false 
+        const shiprocketOrder = await shipRocketOrderModel.findOne({
+            _id: new ObjectId(id),
+            isDeleted: false
         });
 
         if (!shiprocketOrder) {
@@ -324,12 +311,12 @@ export const trackShipmentByOrderId = async (req, res) => {
 
         // Track shipment on Shiprocket
         const trackingResponse = await shipRocketService.trackShipmentByOrderId(shiprocketOrder.shiprocketOrderId);
-        
+
         if (trackingResponse.status !== 200) {
             return res.status(trackingResponse.status).json(new apiResponse(
-                trackingResponse.status, 
-                trackingResponse.message, 
-                {}, 
+                trackingResponse.status,
+                trackingResponse.message,
+                {},
                 trackingResponse.error
             ));
         }
@@ -370,12 +357,12 @@ export const getCouriers = async (req, res) => {
         }
 
         const couriersResponse = await shipRocketService.getCouriers(pincode.toString(), parseFloat(weight.toString()));
-        
+
         if (couriersResponse.status !== 200) {
             return res.status(couriersResponse.status).json(new apiResponse(
-                couriersResponse.status, 
-                couriersResponse.message, 
-                {}, 
+                couriersResponse.status,
+                couriersResponse.message,
+                {},
                 couriersResponse.error
             ));
         }
@@ -399,9 +386,9 @@ export const cancelShipRocketOrder = async (req, res) => {
 
     try {
         // Find the Shiprocket order
-        const shiprocketOrder = await shipRocketOrderModel.findOne({ 
-            _id: new ObjectId(id), 
-            isDeleted: false 
+        const shiprocketOrder = await shipRocketOrderModel.findOne({
+            _id: new ObjectId(id),
+            isDeleted: false
         });
 
         if (!shiprocketOrder) {
@@ -410,12 +397,12 @@ export const cancelShipRocketOrder = async (req, res) => {
 
         // Cancel order on Shiprocket
         const cancelResponse = await shipRocketService.cancelOrder(shiprocketOrder.shiprocketOrderId);
-        
+
         if (cancelResponse.status !== 200) {
             return res.status(cancelResponse.status).json(new apiResponse(
-                cancelResponse.status, 
-                cancelResponse.message, 
-                {}, 
+                cancelResponse.status,
+                cancelResponse.message,
+                {},
                 cancelResponse.error
             ));
         }
@@ -537,9 +524,9 @@ export const shipRocketWebhook = async (req, res) => {
         }
 
         // Find the order by Shiprocket order ID
-        const shiprocketOrder = await shipRocketOrderModel.findOne({ 
+        const shiprocketOrder = await shipRocketOrderModel.findOne({
             shiprocketOrderId: shipment_id,
-            isDeleted: false 
+            isDeleted: false
         });
 
         if (!shiprocketOrder) {
@@ -581,7 +568,7 @@ export const shipRocketWebhook = async (req, res) => {
         // Update internal order status if exists
         if (shiprocketOrder.internalOrderId) {
             let internalOrderStatus = 'processing';
-            
+
             switch (status) {
                 case 'confirmed':
                     internalOrderStatus = 'processing';
@@ -602,7 +589,7 @@ export const shipRocketWebhook = async (req, res) => {
 
             await orderModel.findOneAndUpdate(
                 { _id: shiprocketOrder.internalOrderId },
-                { 
+                {
                     orderStatus: internalOrderStatus,
                     trackingId: awb_code || shiprocketOrder.awbNumber
                 }

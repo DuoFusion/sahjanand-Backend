@@ -10,7 +10,7 @@ router.get('/orders/:id', shipRocketController.getShipRocketOrderById);
 router.delete('/orders/:id', shipRocketController.cancelShipRocketOrder);
 
 // AWB and Pickup Routes
-router.post('/orders/:id/awb', shipRocketController.generateAWB);
+router.post('/orders/awb', shipRocketController.generateAWB);
 router.post('/orders/:id/pickup', shipRocketController.requestPickup);
 
 // Tracking Routes
