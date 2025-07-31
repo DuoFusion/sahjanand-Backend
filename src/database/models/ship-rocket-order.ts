@@ -5,7 +5,7 @@ const shipRocketOrderSchema = new mongoose.Schema({
     internalOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'order', required: true },
     
     // Shiprocket order details
-    shiprocketOrderId: { type: String, unique: true },
+    shiprocketOrderId: { type: String },
     channelId: { type: String },
     pickupLocation: { type: String, default: 'Primary' },
     
