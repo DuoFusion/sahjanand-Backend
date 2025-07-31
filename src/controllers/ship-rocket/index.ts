@@ -516,47 +516,77 @@ export const shipRocketWebhook = async (req, res) => {
     try {
         console.log('Shiprocket webhook received:', webhookData);
 
-        // Extract order information from webhook
-        const { shipment_id, awb_code, status, status_code, status_message } = webhookData;
+        // Extract order information from webhook using actual field names
+        const { 
+            order_id, 
+            sr_order_id, 
+            awb, 
+            current_status, 
+            current_status_id,
+            shipment_status,
+            shipment_status_id,
+            current_timestamp,
+            etd,
+            scans,
+            courier_name,
+            is_return,
+            channel_id
+        } = webhookData;
 
-        if (!shipment_id) {
-            return res.status(400).json(new apiResponse(400, 'Shipment ID is required in webhook', {}, {}));
+        // Use sr_order_id as the primary identifier, fallback to order_id
+        const shipmentId = sr_order_id || order_id;
+
+        if (!shipmentId) {
+            return res.status(400).json(new apiResponse(400, 'Order ID is required in webhook', {}, {}));
         }
 
         // Find the order by Shiprocket order ID
         const shiprocketOrder = await shipRocketOrderModel.findOne({
-            shiprocketOrderId: shipment_id,
+            shiprocketOrderId: shipmentId.toString(),
             isDeleted: false
         });
 
         if (!shiprocketOrder) {
-            console.log(`Order not found for shipment_id: ${shipment_id}`);
+            console.log(`Order not found for shipment_id: ${shipmentId}`);
             return res.status(404).json(new apiResponse(404, 'Order not found', {}, {}));
         }
 
         // Update order with webhook data
         const updateData: any = {
-            status: status || shiprocketOrder.status,
-            statusCode: status_code,
-            statusMessage: status_message
+            status: current_status || shipment_status || shiprocketOrder.status,
+            statusCode: current_status_id || shipment_status_id,
+            statusMessage: `${current_status || shipment_status} - ${courier_name || 'Unknown Courier'}`,
+            courierName: courier_name,
+            isReturn: is_return === 1,
+            channelId: channel_id,
+            lastUpdated: new Date(current_timestamp || new Date())
         };
 
         // Update AWB if provided
-        if (awb_code) {
-            updateData.awbNumber = awb_code;
+        if (awb) {
+            updateData.awbNumber = awb;
         }
 
         // Add webhook data to history
         updateData.webhookData = shiprocketOrder.webhookData || [];
         updateData.webhookData.push({
-            event: webhookData.event || 'status_update',
+            event: 'status_update',
             data: webhookData,
             timestamp: new Date()
         });
 
         // Update delivery date if status is delivered
-        if (status === 'delivered') {
+        if (current_status?.toLowerCase() === 'delivered' || shipment_status?.toLowerCase() === 'delivered') {
             updateData.deliveryDate = new Date();
+        }
+
+        // Add scan history if provided
+        if (scans && Array.isArray(scans)) {
+            updateData.scanHistory = shiprocketOrder.scanHistory || [];
+            updateData.scanHistory.push(...scans.map(scan => ({
+                ...scan,
+                timestamp: new Date(scan.date)
+            })));
         }
 
         const updatedOrder = await shipRocketOrderModel.findOneAndUpdate(
@@ -569,11 +599,15 @@ export const shipRocketWebhook = async (req, res) => {
         if (shiprocketOrder.internalOrderId) {
             let internalOrderStatus = 'processing';
 
-            switch (status) {
+            const statusLower = (current_status || shipment_status || '').toLowerCase();
+
+            switch (statusLower) {
                 case 'confirmed':
+                case 'manifested':
                     internalOrderStatus = 'processing';
                     break;
                 case 'shipped':
+                case 'out_for_delivery':
                     internalOrderStatus = 'shipped';
                     break;
                 case 'delivered':
@@ -585,22 +619,31 @@ export const shipRocketWebhook = async (req, res) => {
                 case 'returned':
                     internalOrderStatus = 'returned';
                     break;
+                case 'out_for_pickup':
+                    internalOrderStatus = 'processing';
+                    break;
+                default:
+                    internalOrderStatus = 'processing';
+                    break;
             }
 
             await orderModel.findOneAndUpdate(
                 { _id: shiprocketOrder.internalOrderId },
                 {
                     orderStatus: internalOrderStatus,
-                    trackingId: awb_code || shiprocketOrder.awbNumber
+                    trackingId: awb || shiprocketOrder.awbNumber,
+                    lastUpdated: new Date()
                 }
             );
         }
 
-        console.log(`Order ${shipment_id} updated with status: ${status}`);
+        console.log(`Order ${shipmentId} updated with status: ${current_status || shipment_status}`);
 
         return res.status(200).json(new apiResponse(200, 'Webhook processed successfully', {
             orderId: updatedOrder._id,
-            status: status
+            status: current_status || shipment_status,
+            awb: awb,
+            courierName: courier_name
         }, {}));
 
     } catch (error) {
