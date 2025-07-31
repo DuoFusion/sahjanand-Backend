@@ -510,7 +510,7 @@ export const getShipRocketOrderById = async (req, res) => {
  * Webhook endpoint to receive updates from Shiprocket
  */
 export const shipRocketWebhook = async (req, res) => {
-    reqInfo(req);
+    // reqInfo(req);
     const webhookData = req.body;
 
     try {
