@@ -213,7 +213,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (collectionFilter) {
-            collectionCriteria._id = { $in: collectionFilter.map(id => new ObjectId(id)) };
+            collectionCriteria._id = new ObjectId(collectionFilter);
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;
         }
@@ -227,7 +227,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (occasionFilter) {
-            criteria['attributes.occasionIds'] = { $in: occasionFilter.map(id => new ObjectId(id)) };
+            criteria['attributes.occasionIds'] = { $in: [new ObjectId(occasionFilter)] };
         }
 
         if (featuredFilter) {
@@ -261,8 +261,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
                 options.sort = { createdAt: -1 };
                 break;
         }
-        
-        console.log("category => ",categoryFilter);
+
         if (categoryFilter) {
             criteria.categoryId = { $in: categoryFilter.map(id => new ObjectId(id)) };
         }
@@ -277,7 +276,7 @@ export const getCollectionFilterWithProducts = async (req, res) => {
             let collections = await getData(collectionModel, collectionCriteria, {}, {});
             return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: collections[0]?.products }, {}));
         }
-        
+
         const products = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
         const productsWithWishlistStatus = await addWishlistStatus(products, userId);
 
