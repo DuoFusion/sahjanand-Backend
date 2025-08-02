@@ -4,13 +4,13 @@ import { createData, getData, getDataWithSorting, reqInfo, responseMessage, upda
 import slugify from 'slugify';
 
 export const productAttributePopulate = [
-    { path: 'attributes.colorIds', model: 'color', select: 'name colorCode' },
     { path: 'attributes.sizeIds', model: 'size', select: 'name' },
     { path: 'attributes.materialIds', model: 'material', select: 'name' },
     { path: 'attributes.fabricIds', model: 'fabric', select: 'name' },
     { path: 'attributes.occasionIds', model: 'occasion', select: 'name' },
     { path: 'categoryId', model: 'category', select: 'name' },
     { path: 'uniqueCategoryId', model: 'unique-category', select: 'name' },
+    { path: 'colorImages.colorId', model: 'color', select: 'name colorCode' },
 ];
 
 let ObjectId = require('mongoose').Types.ObjectId;

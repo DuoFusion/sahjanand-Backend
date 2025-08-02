@@ -140,7 +140,7 @@ export const generateAWB = async (req, res) => {
 
     try {
         if (!courierId) return res.status(400).json(new apiResponse(400, 'Courier ID is required', {}, {}));
-        
+
         // Find the Shiprocket order
         const shiprocketOrder = await shipRocketOrderModel.findOne({
             _id: new ObjectId(shipmentId),
@@ -148,7 +148,7 @@ export const generateAWB = async (req, res) => {
         });
 
         if (!shiprocketOrder) return res.status(404).json(new apiResponse(404, 'Shiprocket order not found', {}, {}));
-        
+
         // Generate AWB on Shiprocket
         const awbResponse = await shipRocketService.generateAWB(shiprocketOrder.shiprocketOrderId, courierId);
 
@@ -297,17 +297,10 @@ export const trackShipmentByAWB = async (req, res) => {
 export const trackShipmentByOrderId = async (req, res) => {
     reqInfo(req);
     const { id } = req.params;
-
     try {
-        // Find the Shiprocket order
-        const shiprocketOrder = await shipRocketOrderModel.findOne({
-            _id: new ObjectId(id),
-            isDeleted: false
-        });
+        const shiprocketOrder = await shipRocketOrderModel.findOne({ internalOrderId: new ObjectId(id), isDeleted: false });
 
-        if (!shiprocketOrder) {
-            return res.status(404).json(new apiResponse(404, 'Shiprocket order not found', {}, {}));
-        }
+        if (!shiprocketOrder) return res.status(404).json(new apiResponse(404, 'Shiprocket order not found', {}, {}));
 
         // Track shipment on Shiprocket
         const trackingResponse = await shipRocketService.trackShipmentByOrderId(shiprocketOrder.shiprocketOrderId);
@@ -517,11 +510,11 @@ export const shipRocketWebhook = async (req, res) => {
         console.log('Shiprocket webhook received:', webhookData);
 
         // Extract order information from webhook using actual field names
-        const { 
-            order_id, 
-            sr_order_id, 
-            awb, 
-            current_status, 
+        const {
+            order_id,
+            sr_order_id,
+            awb,
+            current_status,
             current_status_id,
             shipment_status,
             shipment_status_id,
@@ -541,7 +534,7 @@ export const shipRocketWebhook = async (req, res) => {
         }
 
         // Find the order by Shiprocket order ID
-        console.log("shipmentId => ",shipmentId);
+        console.log("shipmentId => ", shipmentId);
         const shiprocketOrder = await shipRocketOrderModel.findOne({
             shiprocketOrderId: shipmentId.toString(),
             isDeleted: false

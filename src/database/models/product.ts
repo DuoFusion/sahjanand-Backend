@@ -9,12 +9,16 @@ const productSchema = new mongoose.Schema({
     offerPrice: { type: Number },
     weight: { type: Number, default: 0 },
     sku: { type: String },
-    images: [{ type: String }],
+    colorImages: [{
+        colorId: { type: mongoose.Schema.Types.ObjectId, ref: 'color' },
+        images: [{ type: String }],
+    }],
+    frontImage: { type: String },
+    backImage: { type: String },
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'category' },
     uniqueCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'unique-category' },
     tags: [{ type: String }],
     attributes: {
-        colorIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'color' }],
         sizeIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'size' }],
         materialIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'material' }],
         fabricIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'fabric' }],
