@@ -214,10 +214,10 @@ export const searchProducts = async (req, res) => {
         };
         if (search) {
             criteria.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { tags: { $regex: search, $options: 'i' } },
-                { 'seo.keywords': { $regex: search, $options: 'i' } }
+                { name: { $regex: search, $options: 'si' } },
+                { description: { $regex: search, $options: 'si' } },
+                { tags: { $regex: search, $options: 'si' } },
+                { 'seo.keywords': { $regex: search, $options: 'si' } }
             ]
         }
 
