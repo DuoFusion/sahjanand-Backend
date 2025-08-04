@@ -24,14 +24,14 @@ export const getCart = async (req, res) => {
 
 export const addToCart = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { productId, quantity, color, size, price } = req.body;
+    let { user } = req.headers, { productId, quantity, color, size, price, images } = req.body;
     try {
         let cart = await cartModel.findOne({ userId: new ObjectId(user?._id), isDeleted: false });
         if (!cart) {
             // Create new cart with the product
             cart = await new cartModel({
                 userId: new ObjectId(user?._id),
-                products: [{ productId, quantity, color, size, price }]
+                products: [{ productId, quantity, color, size, price, images }]
             }).save();
         } else {
             const index = await findProductIndex(cart.products, productId, color);
@@ -39,8 +39,9 @@ export const addToCart = async (req, res) => {
                 cart.products[index].quantity += quantity;
                 if (price !== undefined) cart.products[index].price += price;
                 if (size !== undefined) cart.products[index].size = size;
+                if (images !== undefined) cart.products[index].images = images;
             } else {
-                cart.products.push({ productId, quantity, color, size, price });
+                cart.products.push({ productId, quantity, color, size, price, images });
             }
             await cart.save();
         }
@@ -53,7 +54,7 @@ export const addToCart = async (req, res) => {
 
 export const updateCartItem = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { _id, productId, color, quantity, size, price } = req.body;
+    let { user } = req.headers, { _id, productId, color, quantity, size, price, images } = req.body;
     try {
         let cart = await cartModel.findOne({ userId: new ObjectId(user?._id), isDeleted: false });
         if (!cart) return res.status(404).json(new apiResponse(404, responseMessage.getDataNotFound('Cart'), {}, {}));
@@ -74,6 +75,7 @@ export const updateCartItem = async (req, res) => {
             cart.products[mergeIndex].quantity += quantity !== undefined ? quantity : cart.products[currentIndex].quantity;
             cart.products[mergeIndex].price += price !== undefined ? price : cart.products[currentIndex].price;
             if (size !== undefined) cart.products[mergeIndex].size = size;
+            if (images !== undefined) cart.products[mergeIndex].images = images;
             cart.products.splice(currentIndex, 1);
         } else {
             // Just update the current item
@@ -82,6 +84,7 @@ export const updateCartItem = async (req, res) => {
             if (quantity !== undefined) cart.products[currentIndex].quantity = quantity;
             if (size !== undefined) cart.products[currentIndex].size = size;
             if (price !== undefined) cart.products[currentIndex].price = price;
+            if (images !== undefined) cart.products[currentIndex].images = images;
         }
 
         await cart.save();
