@@ -224,20 +224,19 @@ export const getCollectionFilterWithProducts = async (req, res) => {
 
         if (colorFilter) {
             let colorData = await getData(colorModel, { name: { $in: colorFilter } }, {}, {});
-            let colorIds = colorData.map(id => new ObjectId(id));
+            let colorIds = colorData.map(color => new ObjectId(color._id));
             criteria['colorImages.colorId'] = { $in: colorIds };
         }
 
         if (materialFilter) {
             let materialData = await getData(materialModel, { name: { $in: materialFilter } }, {}, {});
-            let materialIds = materialData.map(id => new ObjectId(id));
+            let materialIds = materialData.map(material => new ObjectId(material._id));
             criteria['attributes.materialIds'] = { $in: materialIds };
         }
 
         if (occasionFilter) {
-            let occasionData = await getData(occasionModel, { name: { $in: occasionFilter } }, {}, {});
-            let occasionIds = occasionData.map(id => new ObjectId(id));
-            criteria['attributes.occasionIds'] = { $in: occasionIds };
+            let occasionData = await getData(occasionModel, { name: occasionFilter }, {}, {});
+            criteria['attributes.occasionIds'] = { $in: occasionData.map(occasion => new ObjectId(occasion._id)) };
         }
 
         if (featuredFilter) {
@@ -274,13 +273,13 @@ export const getCollectionFilterWithProducts = async (req, res) => {
 
         if (categoryFilter) {
             let categoryData = await getData(categoryModel, { name: { $in: categoryFilter } }, {}, {});
-            let categoryIds = categoryData.map(id => new ObjectId(id));
+            let categoryIds = categoryData.map(category => new ObjectId(category._id));
             criteria.categoryId = { $in: categoryIds };
         }
 
         if (uniqueCategoryFilter) {
             let uniqueCategoryData = await getData(uniqueCategoryModel, { name: { $in: uniqueCategoryFilter } }, {}, {});
-            let uniqueCategoryIds = uniqueCategoryData.map(id => new ObjectId(id));
+            let uniqueCategoryIds = uniqueCategoryData.map(uniqueCategory => new ObjectId(uniqueCategory._id));
             criteria.uniqueCategoryId = { $in: uniqueCategoryIds };
         }
 
