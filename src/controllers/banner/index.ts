@@ -1,6 +1,6 @@
 import { apiResponse } from '../../common';
 import { bannerModel } from '../../database';
-import { createData, getData, reqInfo, responseMessage, updateData, countData } from '../../helper';
+import { createData, getData, reqInfo, responseMessage, updateData, countData, findAllWithPopulate } from '../../helper';
 
 let ObjectId = require("mongoose").Types.ObjectId;
 
@@ -97,7 +97,7 @@ export const getUserBanners = async (req, res) => {
             options.limit = parseInt(limit);
         }
 
-        const response = await getData(bannerModel, criteria, {}, options);
+        const response = await findAllWithPopulate(bannerModel, criteria, {}, options, [{ path: 'linkId' }]);
         const totalCount = await countData(bannerModel, criteria);
 
         const stateObj = {
