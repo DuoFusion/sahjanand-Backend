@@ -9,7 +9,10 @@ export const createCategory = async (req, res) => {
     try {
         const body = req.body;
 
-        const isExist = await getFirstMatch(categoryModel, { priority: body.priority }, {}, {});
+        let isExist = await getFirstMatch(categoryModel, { name: body.name }, {}, {});
+        if (isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("name"), {}, {}))
+
+        isExist = await getFirstMatch(categoryModel, { priority: body.priority }, {}, {});
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("priority"), {}, {}))
 
         const response = await createData(categoryModel, body);
@@ -24,7 +27,10 @@ export const updateCategory = async (req, res) => {
     reqInfo(req)
     let { id } = req.body, body = req.body;
     try {
-        const isExist = await getFirstMatch(categoryModel, { priority: body.priority, _id: { $ne: new ObjectId(body.id) } }, {}, {});
+        let isExist = await getFirstMatch(categoryModel, { name: body.name, _id: { $ne: new ObjectId(body.id) } }, {}, {});
+        if (isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("name"), {}, {}))
+
+        isExist = await getFirstMatch(categoryModel, { priority: body.priority, _id: { $ne: new ObjectId(body.id) } }, {}, {});
         if (isExist) return res.status(404).json(new apiResponse(404, responseMessage?.dataAlreadyExist("priority"), {}, {}))
 
         const response = await updateData(categoryModel, { _id: id }, body, {});
