@@ -1,5 +1,5 @@
 import { apiResponse } from '../../common';
-import { collectionModel, productModel } from '../../database';
+import { categoryModel, collectionModel, colorModel, materialModel, occasionModel, productModel, uniqueCategoryModel } from '../../database';
 import { reqInfo, responseMessage } from '../../helper';
 import { getData, countData, findAllWithPopulate, getDataWithSorting } from '../../helper/database_service';
 import { addWishlistStatus, productAttributePopulate } from '../product/index';
@@ -204,38 +204,48 @@ export const getCollectionWithProducts = async (req, res) => {
 
 export const getCollectionFilterWithProducts = async (req, res) => {
     reqInfo(req);
-    let { user } = req.headers, { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter, offerFilter } = req.body, collectionCriteria: any = {}, criteria: any = {}, options: any = { lean: true };
+    let { user } = req.headers, criteria: any = {}, options: any = { lean: true };
     const userId = user?._id;
+    const { priceFilter, categoryFilter, colorFilter, materialFilter, sortBy, collectionFilter, uniqueCategoryFilter, occasionFilter, featuredFilter, offerFilter } = req.body;
+    let collectionCriteria: any = {};
+
     try {
 
+        // Parse price filter (assuming format: "min-max" or separate min/max params)
         if (priceFilter) {
             criteria.salePrice = { $gte: priceFilter.min, $lte: priceFilter.max };
         }
 
         if (collectionFilter) {
-            collectionCriteria._id = new ObjectId(collectionFilter);
+            collectionCriteria.name = collectionFilter;
             collectionCriteria.isDeleted = false;
             collectionCriteria.isBlocked = false;
         }
 
         if (colorFilter) {
-            criteria['attributes.colorIds'] = { $in: colorFilter.map(id => new ObjectId(id)) };
+            let colorData = await getData(colorModel, { name: { $in: colorFilter } }, {}, {});
+            let colorIds = colorData.map(id => new ObjectId(id));
+            criteria['colorImages.colorId'] = { $in: colorIds };
         }
 
         if (materialFilter) {
-            criteria['attributes.materialIds'] = { $in: materialFilter.map(id => new ObjectId(id)) };
+            let materialData = await getData(materialModel, { name: { $in: materialFilter } }, {}, {});
+            let materialIds = materialData.map(id => new ObjectId(id));
+            criteria['attributes.materialIds'] = { $in: materialIds };
         }
 
         if (occasionFilter) {
-            criteria['attributes.occasionIds'] = { $in: [new ObjectId(occasionFilter)] };
+            let occasionData = await getData(occasionModel, { name: { $in: occasionFilter } }, {}, {});
+            let occasionIds = occasionData.map(id => new ObjectId(id));
+            criteria['attributes.occasionIds'] = { $in: occasionIds };
         }
 
         if (featuredFilter) {
-            criteria.isFeatured = featuredFilter;
+            criteria.isFeatured = featuredFilter === 'true';
         }
 
         if (offerFilter) {
-            criteria.isOffer = offerFilter;
+            criteria.isOffer = offerFilter === 'true';
         }
 
         switch (sortBy) {
@@ -263,11 +273,15 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         }
 
         if (categoryFilter) {
-            criteria.categoryId = { $in: categoryFilter.map(id => new ObjectId(id)) };
+            let categoryData = await getData(categoryModel, { name: { $in: categoryFilter } }, {}, {});
+            let categoryIds = categoryData.map(id => new ObjectId(id));
+            criteria.categoryId = { $in: categoryIds };
         }
 
         if (uniqueCategoryFilter) {
-            criteria.uniqueCategoryId = { $in: uniqueCategoryFilter.map(id => new ObjectId(id)) };
+            let uniqueCategoryData = await getData(uniqueCategoryModel, { name: { $in: uniqueCategoryFilter } }, {}, {});
+            let uniqueCategoryIds = uniqueCategoryData.map(id => new ObjectId(id));
+            criteria.uniqueCategoryId = { $in: uniqueCategoryIds };
         }
 
         criteria.isDeleted = false
