@@ -322,11 +322,9 @@ export const getOrderDetailsByShiprocketId = async (req, res) => {
         // Find the specific order by ID
         const orderData = orders.find((order: any) => order.id.toString() === shiprocketOrder.shiprocketOrderId.toString());
 
-
         if (!orderData) return res.status(404).json(new apiResponse(404, 'Order data not found', {}, {}));
 
         const activities = orderData.activities || [];
-        console.log("activities => ",activities);
         // Define activity status mapping for better tracking
         const activityStatusMap: { [key: string]: { status: string; description: string; isCompleted: boolean } } = {
             'OUT_FOR_PICKUP': { status: 'Out for Pickup', description: 'Courier is out for pickup', isCompleted: true },
@@ -339,97 +337,8 @@ export const getOrderDetailsByShiprocketId = async (req, res) => {
             'RETURNED': { status: 'Returned', description: 'Package has been returned', isCompleted: true }
         };
 
-        const normalizedShipmentTrack = activities.map((activity: string, index: number) => {
-            // Create a timeline based on activity order and order dates
-            const baseDate = new Date(orderData.created_at);
-            const activityDate = new Date(baseDate.getTime() + (index * 24 * 60 * 60 * 1000));
-
-            const activityInfo = activityStatusMap[activity] || {
-                status: activity,
-                description: activity,
-                isCompleted: index < activities.length - 1
-            };
-
-            return {
-                id: index + 1,
-                status: activityInfo.status,
-                statusLocation: orderData.customer_city || '',
-                statusDate: activityDate,
-                statusTime: activityDate.toLocaleTimeString(),
-                statusBody: activityInfo.description,
-                // Add activity-specific details
-                activityType: activity,
-                isCompleted: activityInfo.isCompleted,
-                originalActivity: activity
-            };
-        });
-
-        // Extract shipment details
         const shipmentDetails = orderData.shipments?.[0] || {};
-
-        const trackingData = {
-            shipmentStatus: orderData.status || shipmentDetails.status,
-            shipmentStatusId: orderData.status_code || shipmentDetails.status,
-            shipmentTrack: normalizedShipmentTrack,
-            // Additional tracking information
-            awbCode: shipmentDetails.awb,
-            courierName: shipmentDetails.courier,
-            pickupDate: shipmentDetails.pickedup_timestamp || shipmentDetails.shipped_date,
-            deliveredDate: shipmentDetails.delivered_date,
-            weight: shipmentDetails.weight,
-            packages: orderData.product_quantity || 1,
-            deliveredTo: orderData.customer_city,
-            destination: orderData.customer_city,
-            origin: orderData.pickup_location,
-            consigneeName: orderData.customer_name,
-            edd: shipmentDetails.etd, // Estimated Delivery Date
-            pod: shipmentDetails.pod, // Proof of Delivery
-            podStatus: shipmentDetails.pod ? 'Available' : 'Not Available',
-            // Additional order details
-            orderId: orderData.id,
-            channelOrderId: orderData.channel_order_id,
-            totalAmount: orderData.total,
-            paymentMethod: orderData.payment_method,
-            customerEmail: orderData.customer_email,
-            customerPhone: orderData.customer_phone,
-            customerAddress: orderData.customer_address,
-            customerPincode: orderData.customer_pincode,
-            customerState: orderData.customer_state,
-            customerCountry: orderData.customer_country,
-            pickupLocation: orderData.pickup_location,
-            manifestId: orderData.manifest_id,
-            invoiceNo: orderData.invoice_no,
-            // Product details
-            products: orderData.products?.map((product: any) => ({
-                id: product.id,
-                channelOrderProductId: product.channel_order_product_id,
-                name: product.name,
-                sku: product.channel_sku,
-                quantity: product.quantity,
-                productId: product.product_id,
-                available: product.available,
-                status: product.status,
-                price: product.price,
-                productCost: product.product_cost,
-                statusCode: product.status_code,
-                hsn: product.hsn,
-                isAllopathic: product.is_allopathic,
-                discount: product.discount,
-                discountIncludingTax: product.discount_including_tax,
-                sellingPrice: product.selling_price,
-                mrp: product.mrp,
-                taxPercentage: product.tax_percentage,
-                description: product.description
-            })) || [],
-            // Activity summary
-            totalActivities: activities.length,
-            completedActivities: activities.length - 1,
-            currentActivity: activities[activities.length - 1] || 'Unknown',
-            // Order timeline
-            orderCreatedAt: orderData.created_at,
-            orderUpdatedAt: orderData.updated_at,
-            channelCreatedAt: orderData.channel_created_at
-        };
+        const currentStatus = deriveInternalOrderStatus(orderData.status || shipmentDetails.status, activities);
 
         const linked = await shipRocketOrderModel.findOne({ shiprocketOrderId: String(orderData.id), isDeleted: false });
         if (linked?.internalOrderId) {
@@ -442,10 +351,7 @@ export const getOrderDetailsByShiprocketId = async (req, res) => {
         }
 
         return res.status(200).json(new apiResponse(200, 'Order details retrieved successfully', {
-            orderData,
-            trackingData,
-            activities: activities,
-            shipmentDetails: shipmentDetails
+            currentStatus
         }, {}));
 
     } catch (error) {
