@@ -14,8 +14,7 @@ router.post('/orders/awb', shipRocketController.generateAWB);
 router.post('/orders/:id/pickup', shipRocketController.requestPickup);
 
 // Tracking Routes
-router.get('/track/awb/:awbNumber', shipRocketController.trackShipmentByAWB);
-router.get('/orders/:id/track', shipRocketController.trackShipmentByOrderId);
+router.get('/orders/:shiprocketOrderId/track', shipRocketController.getOrderDetailsByShiprocketId);
 
 // Courier Routes
 router.get('/couriers', shipRocketController.getCouriers);

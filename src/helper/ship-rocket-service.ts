@@ -294,15 +294,14 @@ class ShiprocketService {
     /**
      * Track shipment by AWB number
      */
-    async trackShipment(awbNumber: string): Promise<ShiprocketResponse> {
+    async trackShipment(orderNumber: number, channelId: number): Promise<ShiprocketResponse> {
         try {
-            const response: AxiosResponse = await this.api.get(`/external/courier/track/awb/${awbNumber}`);
-
-            if (response.data && response.data.status === 200) {
+            const response: AxiosResponse = await this.api.get(`/external/courier/track?order_id=${orderNumber}&channel_id=${channelId}`);
+            if (response.data && response.status === 200) {
                 return {
                     status: 200,
                     message: 'Tracking data retrieved successfully',
-                    data: response.data.data
+                    data: response.data.tracking_data
                 };
             } else {
                 return {
@@ -326,13 +325,12 @@ class ShiprocketService {
      */
     async trackShipmentByOrderId(orderId: string): Promise<ShiprocketResponse> {
         try {
-            const response: AxiosResponse = await this.api.get(`/external/orders/show/${orderId}`);
-
-            if (response.data && response.data.status === 200) {
+            const response: AxiosResponse = await this.api.get(`/external/orders`);
+            if (response.data && response.status === 200) {
                 return {
                     status: 200,
                     message: 'Order tracking data retrieved successfully',
-                    data: response.data.data
+                    data: response.data || response.data.data
                 };
             } else {
                 return {
