@@ -325,17 +325,6 @@ export const getOrderDetailsByShiprocketId = async (req, res) => {
         if (!orderData) return res.status(404).json(new apiResponse(404, 'Order data not found', {}, {}));
 
         const activities = orderData.activities || [];
-        // Define activity status mapping for better tracking
-        const activityStatusMap: { [key: string]: { status: string; description: string; isCompleted: boolean } } = {
-            'OUT_FOR_PICKUP': { status: 'Out for Pickup', description: 'Courier is out for pickup', isCompleted: true },
-            'PICKED_UP': { status: 'Picked Up', description: 'Package has been picked up', isCompleted: true },
-            'ORDER_SHIPPED': { status: 'Order Shipped', description: 'Order has been shipped', isCompleted: true },
-            'ORDER_IN_TRANSIT': { status: 'In Transit', description: 'Order is in transit', isCompleted: false },
-            'OUT_FOR_DELIVERY': { status: 'Out for Delivery', description: 'Package is out for delivery', isCompleted: false },
-            'DELIVERED': { status: 'Delivered', description: 'Package has been delivered', isCompleted: true },
-            'FAILED_DELIVERY': { status: 'Delivery Failed', description: 'Delivery attempt failed', isCompleted: false },
-            'RETURNED': { status: 'Returned', description: 'Package has been returned', isCompleted: true }
-        };
 
         const shipmentDetails = orderData.shipments?.[0] || {};
         const currentStatus = deriveInternalOrderStatus(orderData.status || shipmentDetails.status, activities);
