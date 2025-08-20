@@ -198,16 +198,16 @@ export const verifyRazorpayPayment = async (req, res) => {
     reqInfo(req)
     let { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body, { user } = req.headers;
     try {
-        // const sign = razorpay_order_id + "|" + razorpay_payment_id;
-        // const expectedSignature = crypto
-        //     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-        //     .update(sign)
-        //     .digest("hex");
+        const sign = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(sign)
+            .digest("hex");
 
-        // if (razorpay_signature !== expectedSignature) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
+        if (razorpay_signature !== expectedSignature) return res.status(404).json(new apiResponse(404, responseMessage?.getDataNotFound("signature"), {}, {}));
 
-        const order = await orderModel.findOne({ _id: new ObjectId(razorpay_order_id) }).lean();
-
+        const order = await orderModel.findOne({ razorpayOrderId: razorpay_order_id }).lean();
+        
         if (order) {
             await orderModel.findOneAndUpdate(
                 { _id: new ObjectId(order._id) },
@@ -228,13 +228,11 @@ export const verifyRazorpayPayment = async (req, res) => {
                     const validation = shipRocketService.validateOrderPayload(shiprocketPayload);
                     if (validation.isValid) {
                         const shiprocketResponse = await shipRocketService.createOrder(shiprocketPayload);
-                        console.log("shiprocketResponse => ",shiprocketResponse);
                         if (shiprocketResponse.status === 200 && shiprocketResponse.data) {
                             // The shipment_id is in shiprocketResponse.data.data.shipment_id
                             const shipmentId = shiprocketResponse.data.shipment_id;
                             
                             if (!shipmentId) {
-                                console.log('Shiprocket response missing shipment_id:',     );
                                 // Continue with order processing even if Shiprocket fails
                             } else {
                                 const shiprocketOrderData = {
