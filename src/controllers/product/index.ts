@@ -136,8 +136,8 @@ export const getProducts = async (req, res) => {
         }
 
         // Parse pagination params
-        const pageNum = parseInt(page) || 1;
-        const limitNum = parseInt(limit) || 20;
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
 
         const options = {
             skip: (pageNum - 1) * limitNum,
