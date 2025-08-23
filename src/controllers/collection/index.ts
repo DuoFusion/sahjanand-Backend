@@ -287,7 +287,13 @@ export const getCollectionFilterWithProducts = async (req, res) => {
         criteria.isBlocked = false
         if (Object.keys(collectionCriteria).length > 0 && !categoryFilter && !uniqueCategoryFilter && !featuredFilter && !occasionFilter && !colorFilter && !materialFilter) {
             let collections = await getData(collectionModel, collectionCriteria, {}, {});
-            return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: collections[0]?.products }, {}));
+            
+            // Get all products that are in the collection's products array using ternary operator
+            const products = collections[0]?.products && collections[0].products.length > 0 
+                ? await getData(productModel, { _id: { $in: collections[0].products } }, {}, {})
+                : [];
+            
+            return res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('Collection'), { products: products }, {}));
         }
 
         const products = await findAllWithPopulate(productModel, criteria, {}, options, productAttributePopulate);
