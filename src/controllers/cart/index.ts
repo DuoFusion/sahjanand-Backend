@@ -34,7 +34,10 @@ export const addToCart = async (req, res) => {
                 products: [{ productId, quantity, color, size, price, images }]
             }).save();
         } else {
-            const index = await findProductIndex(cart.products, productId, color);
+            // If the same product/color/size exists, update it; otherwise add a new entry
+            const index = cart.products.findIndex(
+                p => p.productId.toString() === productId && p.color === color && p.size === size
+            );
             if (index > -1) {
                 cart.products[index].quantity += quantity;
                 if (price !== undefined) cart.products[index].price += price;

@@ -11,11 +11,11 @@ router.get('/search', productController.searchProducts);
 router.get('/homepage', productController.getHomepageProducts);
 router.get('/filter', productController.getProductWithFilter);
 router.get('/:id', productController.getProductById);
+router.get('/', productController.getProducts);
 
 router.use(adminJWT)
 router.post('/add', productController.createProduct);
 router.post('/edit', productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
-router.get('/', productController.getProducts);
 
 export const productRoutes = router; 
